@@ -3,71 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Descargas</title>
+    <title>Spinning Services</title>
     <style>
-        /* Estilos generales */
+        :root {
+            --bg-dark: #181c2a;
+            --bg-panel: #23273a;
+            --accent: #3a7afe;
+            --accent-hover: #1e4db7;
+            --text-main: #e3e6f3;
+            --text-muted: #8a94b9;
+            --border-radius: 18px;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
             margin: 0;
             padding: 0;
+            min-height: 100vh;
+            background: var(--bg-dark);
+            color: var(--text-main);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-  	        background: linear-gradient(to bottom, #00d2ff, #000000); /* De azul a negro */
         }
-
-        /* Contenedor principal */
         .container {
+            background: var(--bg-panel);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 40px 32px 32px 32px;
+            width: 100%;
+            max-width: 560px;
             text-align: center;
-            width: 90%;
-            max-width: 400px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
         }
-
-        /* Estilos de los enlaces */
-        .link {
+        .hero-img {
+            width: 100%;
+            height: auto;
+            max-height: 160px;
+            object-fit: contain;
             display: block;
+            margin: 0 auto 18px auto;
+        }
+        h1 {
+            font-size: 2.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+        p {
+            color: var(--text-muted);
+            margin-bottom: 28px;
+        }
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .link {
+            background: transparent;
+            color: var(--text-main);
+            border: 2px solid var(--accent);
+            border-radius: 12px;
+            padding: 14px 0;
+            font-size: 1.1rem;
+            font-weight: 500;
             text-decoration: none;
-            color: #007bff;
-font-size: 18px;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
-            transition: background 0.3s, color 0.3s;
+            transition: background 0.2s, color 0.2s, border 0.2s;
+            outline: none;
+            cursor: pointer;
         }
-
-        .link:hover {
-            background: #00d2ff;
-            color: #000000;
+        .link:focus, .link:hover {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent-hover);
         }
-
-        /* Adaptabilidad */
-        @media (max-width: 480px) {
-            .link {
-                font-size: 16px;
-                padding: 12px;
+        .nav-controls {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 32px;
+        }
+        .nav-btn {
+            background: var(--bg-dark);
+            color: var(--accent);
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 1.5rem;
+            box-shadow: 0 2px 8px rgba(58,122,254,0.12);
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            outline: none;
+        }
+        .nav-btn:focus, .nav-btn:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 24px 8px;
             }
+            h1 {
+                font-size: 1.4rem;
+            }
+            .hero-img { max-height: 120px; }
         }
     </style>
+    <script>
+        // Navegación por teclado y botones
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = Array.from(document.querySelectorAll('.link'));
+            let current = 0;
+            function focusLink(idx) {
+                if (links[idx]) {
+                    links[idx].focus();
+                }
+            }
+            focusLink(current);
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                    current = (current + 1) % links.length;
+                    focusLink(current);
+                } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                    current = (current - 1 + links.length) % links.length;
+                    focusLink(current);
+                }
+            });
+            const up = document.getElementById('nav-up');
+            const down = document.getElementById('nav-down');
+            const left = document.getElementById('nav-left');
+            const right = document.getElementById('nav-right');
+            if (up) up.onclick = function() {
+                current = (current - 1 + links.length) % links.length;
+                focusLink(current);
+            };
+            if (down) down.onclick = function() {
+                current = (current + 1) % links.length;
+                focusLink(current);
+            };
+            if (left) left.onclick = function() {
+                current = (current - 1 + links.length) % links.length;
+                focusLink(current);
+            };
+            if (right) right.onclick = function() {
+                current = (current + 1) % links.length;
+                focusLink(current);
+            };
+        });
+    </script>
 </head>
 <body>
 
 <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <div class="container">
-	<img src="imagen.jpg" alt="Imagen centrada" style="max-width:40%; height:auto;">
-        <a class="link" href="https://www.dropbox.com/scl/fi/x1ssrsz6k1vmkx1dswkox/wireguard.android-1.0.20231018.apk?rlkey=b0vvzczj049a3mfqh155tbjz5&e=1&st=c5etvai7&dl=0" target="_blank">Descargar WireGuard</a>
-        <a class="link" href="https://www.dropbox.com/scl/fi/caehreqpc9dj9wkv2mctz/MullvadVPN-2025.1.apk?rlkey=32fjusqt2p4uyqnlsnwcm7aqq&e=1&st=f2p4ecpk&dl=0" target="_blank">Descargar Mullvad VPN</a>
-        <a class="link" href="https://www.dropbox.com/scl/fi/y2x0psk08ai3tnm6twgct/SpinningTV-7.0-v910-vpn.apk?rlkey=pldpe5vuaw6gv3nt10g4uxhey&e=1&st=i252bcyk&dl=0" target="_blank">Descargar Spinning TV</a>
-	    <a class="link" href="https://www.dropbox.com/scl/fi/tq8sxbxa0vaa7fy3cg47x/ibop.apk?rlkey=agiwoz8sx0vy14nboiwzrhe5e&e=1&st=vzqopjxq&dl=0" target="_blank">Descargar ibo player</a>	
-	    <a class="link" href="https://www.dropbox.com/scl/fi/cu56m6rdzx0pr0cujp4pd/ibopro.apk?rlkey=39lplwvzwa0admyknbigibo1k&e=1&st=fudmyb8y&dl=0" target="_blank">Descargar ibo player pro</a>
-	    <a class="link" href="https://www.dropbox.com/scl/fi/w1fn4fjyuzh4q5a3gykye/nanomid_player_latest.apk?rlkey=zxtl2vdq14cxuz40sw289pbxd&st=dc432mkw&dl=0" target="_blank">Descargar Nanomid Player</a>
-	    <a class="link" href="https://www.dropbox.com/scl/fi/q85njn9mtshglkvjb5weg/Es-File-Explorer.apk?rlkey=2wckzs7ohnhbx4synfvgmgp6d&e=1&st=0qzxmlsi&dl=0" target="_blank">Descargar ES File Explorer</a>
-        <a class="link" href="archivo.html" target="">DESCARGA TU ARCHIVO DE CONFIGURACIÓN PARA WIREGUARD</a>
+<div class="container">
+    <img src="logo.png" alt="Banner" class="hero-img">
+    <h1>Spinning Services</h1>
+    <p>Descarga tus apps favoritas de forma segura y rápida. Navega con las flechas o los botones de control.</p>
+    <div class="links">
+        <a class="link" href="https://download.wireguard.com/android-client/com.wireguard.android-1.0.20250531.apk" target="_blank">Descargar WireGuard</a>
+        <a class="link" href="https://mullvad.net/es/download/app/apk/latest" target="_blank">Descargar Mullvad VPN</a>
+        <a class="link" href="https://www.dropbox.com/scl/fi/y2x0psk08ai3tnm6twgct/SpinningTV-7.0-v910-vpn.apk?rlkey=pldpe5vuaw6gv3nt10g4uxhey&e=1&st=i252bcyk&dl=1" target="_blank">Descargar Spinning TV</a>
+        <a class="link" href="https://www.dropbox.com/scl/fi/cu56m6rdzx0pr0cujp4pd/ibopro.apk?rlkey=39lplwvzwa0admyknbigibo1k&e=1&st=fudmyb8y&dl=1" target="_blank">Descargar IBO Player Pro (Official)</a>
+        <a class="link" href="https://www.dropbox.com/scl/fi/d84kshxqo61bpcfntcwhh/SpinningTVIBO_ZIP806_signed.apk?rlkey=5shmtqytuzj6nceq5dwtuz6tp&st=9bmr1emg&dl=1" target="_blank">Descargar Spinning TV IBO</a>
+        <a class="link" href="https://www.dropbox.com/scl/fi/mieiyfmjf0ok0cvzxnggg/SpinningTVMate_ZIP96_signed.apk?rlkey=wqjwfc337ejkixojnkhq3ln6h&st=zx9a7efh&dl=1" target="_blank">Descargar Spinning TV Mate</a>
     </div>
+</div>
 
 </body>
 </html>
