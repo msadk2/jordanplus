@@ -230,11 +230,37 @@
     }
 
     .downloader-code span {
-      color: #ffc4d9;
-      font-size: 9px;
-      font-weight: 900;
-      letter-spacing: .08em;
-      text-transform: uppercase;
+      width: 24px;
+      height: 24px;
+      flex: 0 0 24px;
+      overflow: hidden;
+      border-radius: 5px;
+      color: transparent;
+      position: relative;
+      background: #ff761b;
+      font-size: 0;
+      line-height: 0;
+      text-indent: -9999px;
+    }
+
+    .downloader-code span::after {
+      content: "D";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font: 950 17px/1 Arial, sans-serif;
+      text-indent: 0;
+    }
+
+    .downloader-code span img {
+      position: absolute;
+      z-index: 1;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .downloader-code strong {
@@ -374,28 +400,39 @@
       }
 
       .title-group {
-        flex-wrap: nowrap;
-        gap: 8px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+          "title badge"
+          "code badge";
+        align-items: center;
+        gap: 4px 8px;
       }
 
       .card h3 {
+        grid-area: title;
         min-width: 0;
-        flex: 1 1 auto;
         font-size: clamp(16px, 1.25vw, 20px);
         white-space: nowrap;
       }
 
       .downloader-code {
+        grid-area: code;
         flex: 0 0 auto;
         padding: 5px 8px 6px;
         gap: 6px;
         border-radius: 9px;
       }
 
-      .downloader-code span { font-size: 7px; }
+      .downloader-code span {
+        width: 20px;
+        height: 20px;
+        flex-basis: 20px;
+      }
       .downloader-code strong { font-size: 15px; }
 
       .badge {
+        grid-area: badge;
         flex: 0 0 auto;
         padding: 5px 7px;
         font-size: 7px;
@@ -569,6 +606,17 @@
 
   <footer>SPINNING TV</footer>
   <script>
+    const downloaderIcon = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAIAAAAlC+aJAAAI90lEQVRo3u1aXYxdVRX+vrXP/Tlz585MbzulLRDDXzsh/DRKtCaAVRMRgQckIDYKBpwS1AfTGA2Y+AAPvqASTEUEwbbhx6RGBU2rSFIgGCkEaxGopNMCbakd2+l07szcc+85ey8fzrnTmfb+T+m0SXfOw0zuufuub629/r61WfzBhVAFiNNvKUgPqqoK6FxL08ki4AEElDz9LKCqAGWuxZjtOgNgrtcZAHO9vNZfVVWSJ8LvFYpq4J5tCmoVQCy9ugiVUuc/SQACEYiBeBQDEuqgClV0FMpbBRBLz1zBLL0UajuTX51FGGhQ1MlRTI5q6QichZdhpguUBEmbMFo+QhRUAnPRxf7gOnUOZAe5r2pGh/K4jg274SH73uvRuy+7vdvhLP1eUNW5tnZuwwemaxKgavsWJ1RBEWTz9Hu48ALv0mvSztrdW8Mtj0ZvboLxmO5SG7WOoSMAs3NlVQUA5wCnDhBjzl/hXfDpaMeW8u/udQd2MjdPbcT4h5qtzuSIN5/dEiENjQcA6tRZb2Bl15pN3uXX6fgIjddidTmneYCMlUExoKiLkO3J3vF4asVXEwzaHMUpkMiq54TiQRXQzKoHzSVf0MnRVjB8ZADi0D71NEdBqFIEqqRkb/0pC+dqGJDS+OsnGoAqAFVVZ2c8NlJnE3XWg5RgMGoj6T0rc/0PEQZN/fhEA2DVv4034xFDMQTUWYXGstb8uqpCjDqX+sSNZmClBkWIaWCEjsJoIwM4UtzYcGXzA1WZhJkcexfJ4gFz7uX0e1SdOkeRpLg6FgKhGldL6c8Mlv7z0pReTgaApDYrHQlffgKJppHUbSbFviWp5TekPv8dyS+IMdStHSgAzLKVcs5l7sO3mPbrGeGjcWIx7C4wV2CuwO4Cu+ezez6zeR0/VHn+odKD19kP36FIXJLUkp4E1EY0nnfpNQgD1HfljwaAAs6qs5j+qKPx2HuWO/hesG61BuPxKap7vkkA3tKrkfZRD+rJzwMaVZgruH1vha+sAwBXp7CtViuyeJn0na1RpV4Nf7IBkISLkO6Ktj0HoHHJoOqYzbP/PNjyqWKBWC54GTe80w0PJf/WhIq44IP0nwdrTyUAAMVoUHTDOwEArvHLMu+cBsThHNVCJJx1I3uA+rJN1Uj5/gZN7FwWc1o8VP2rXiACAGZ7ICc5jLYIoFxs9goBIO036J/qZuIkz4upbiUQAxq0sgiI4fQsq6rOziwcCBu2tJvxQNY7arUBJN23jTBxOEEvRkujGozFnzdhVpzViZGjZYJzMClmuzXuo08oE14bAEW0UvIGVqau/IaOj0AEFEQV9i1JrFFX9wTA3kXZ235ZBRMhm9fR/ZXNDyAqT/uuQlqrxJytjmBqGKHOFqrwMnboVe/jN6Y+ecsxPEoDyiD+iNl86oqbMGXJ0ljpN6s1GGc6O90XmfZbAhCVG5TTtXVZJXBs8MRg5fmHKAIbqg01zvwNWqSjDU2kYZmkG9kz+bMv2bf/xrSvzs0A4PdNt1vN7QBoeSImctoAQFJVKYb5BeVn7ytveoBeGpTmbErcVZFQMJVx/9tV+sUtbniI3QsSJz4qK9mzsMlucQM3OQp19ZyurkAkVR3UMVeo/PnH5WfvoxioU3V1+ykkFGdcCdv9OybX3uwOvU+/R2044+CpQyoj8z/WSP3Vn9AjBxpgbKTR2A5Qx/yCyl8fDDbeQzFQ1MYQd1FT0n+wrbT2Zh07wGz+eKZNbcT8All0UQMAWv1ID+8FpV7CbnIkEgzOMt8fbnkkeOq7sSmPxRBHzCnph14tPXyrlkaZyR0jvapCPJTHvYuuYq6gzjaKyBQAbngIJlWvZGqeiadhWBj+fUOw7m44CzAOTVplxlU1lj7a8eLkI6s0LDHlH697iqc2RDqX+tzdaKR/jWen7vBed3A3vMysSolYCLUhe/qj1zcGj9+JqEyRqeSqqnARjRe9ubn02G1QZToHgMaDmKMPqJUJlI5kvny/WXLxcbn5GAwOgN21VYsHEway1mpzwBFW2LMw2r6p9Oht/h2/ZjavzoICZ2lS4Rt/CDZ8m2lfndWxAzNyVqzrlC+LlmW++D3vsmvVWcZ8yfEYEv5IAET//GPj0NfOgEMd074GRXbPtzu2lB5Z5X9zPXPzNKrQS4f/eDp4Zg2zPVouSv/5ZsUqRJWkM/TS7OqTeefI4gFZPEAvncBupDBHMfaDbdGOF5ntjq0xKwCgoDRmBj5rll5dfmYNexbaXa9NPvwVf3C99C6qvPRYeeO9zBW0dEQWD/h3PSl9S2KOaLpeE1dxlpQkBhyn/ulkaOWFtQhL8PrU1Z0YtMMLURAG6Stvh4vKG+9hruA+2BY8fodZtrLyl5+wu6ATo3LuZf7qJ6WnX20IUI8JHSQonGLaah0eVkNZtH1T9K8/0e+FNnKVNoktEkD66juZ9oOn17Crz+572+5+jd39On7QnP8pf3A9c/PUWZqUTp/hJET6jH2Olx6kOkvjuSP/DX7/I5hU0/lfJw2NRpXUilXZr6/V8jjEsGeRFofN0qv8u55KpBdTnclWn6aDzSnpxWgYBBu+pSN7mPaThFN/ddSRiVEbpq64KXv7r+LW1rvkGn9wA/38DOlb1UdCPqqNKEYrpeCJQfvuy+zqbWVY1hk3SoinNkotvx7qom3PZb/2c6ay6lwb0ld9GtCYNaHx3MjeYP3ddterzBVaHPV1BkABQow66y2/wVt+PWISKqYKZ0aS+lp3cIAIQBpPnQu3/rb87P06figZ8rVmw87GrArEBToTbpAEqNqE4ZkaDgJQGBAkXfFg9M4L4Svr7e6tyORqFn8nGgBlWoPWqhcluVxVg6KOHXDDQ3bPdvv+G27fWzq6H16aXYV4XNnWoJvF71+o2tJwPLlqcHanVw0UGpU1GNOJEUwc1qAIZ2E8pHx66Vq0RSsaabGtjt8WTydGon9vnsVlD4IC40E8+r1JMlYXn8PO7u21VQspxYPf26H0VVUkM5v4asesr3u24QOJhpp6ahvrBBBEp8Cg+wyA03udATDXy0vouxbuY5ySS71qdDz9Ln/HNwH+D1Wy0lSZmaBKAAAAAElFTkSuQmCC";
+    document.querySelectorAll(".downloader-code span").forEach(label => {
+      const icon = document.createElement("img");
+      icon.src = downloaderIcon;
+      icon.alt = "Downloader";
+      icon.width = 24;
+      icon.height = 24;
+      label.textContent = "";
+      label.appendChild(icon);
+    });
+
     document.addEventListener("copy", event => event.preventDefault());
     document.addEventListener("cut", event => event.preventDefault());
     document.addEventListener("dragstart", event => event.preventDefault());
