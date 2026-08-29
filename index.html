@@ -401,10 +401,11 @@
 
       .title-group {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: max-content max-content;
         grid-template-areas:
           "title badge"
-          "code badge";
+          "code code";
+        justify-content: start;
         align-items: center;
         gap: 4px 8px;
       }
@@ -436,6 +437,7 @@
         flex: 0 0 auto;
         padding: 5px 7px;
         font-size: 7px;
+        align-self: center;
       }
 
       .download {
