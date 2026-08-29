@@ -317,6 +317,104 @@
       .catalog + .catalog { margin-top: 50px; }
     }
 
+    /* Vista compacta para televisores y pantallas grandes */
+    @media (min-width: 900px) {
+      .topbar-inner {
+        width: min(1460px, calc(100% - 52px));
+        min-height: 78px;
+      }
+
+      .brand { width: min(330px, 38vw); }
+      .brand img { height: 54px; }
+
+      main {
+        width: min(1460px, calc(100% - 52px));
+        padding: 18px 0 34px;
+      }
+
+      .intro {
+        max-width: 1180px;
+        margin-bottom: 20px;
+        padding: 12px 22px;
+        border-radius: 14px;
+      }
+
+      .intro h1 {
+        margin-bottom: 4px;
+        font-size: clamp(23px, 2.1vw, 31px);
+      }
+
+      .intro p {
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .catalog + .catalog { margin-top: 24px; }
+
+      .section-head {
+        max-width: 1460px;
+        margin-bottom: 10px;
+        gap: 14px;
+      }
+
+      h2 { font-size: clamp(25px, 2.4vw, 34px); }
+
+      .grid {
+        max-width: 1460px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px 12px;
+      }
+
+      .card { border-radius: 15px; }
+
+      .card-body {
+        min-height: 64px;
+        padding: 8px 10px 8px 14px;
+        gap: 10px;
+      }
+
+      .title-group {
+        flex-wrap: nowrap;
+        gap: 8px;
+      }
+
+      .card h3 {
+        min-width: 0;
+        flex: 1 1 auto;
+        font-size: clamp(16px, 1.25vw, 20px);
+        white-space: nowrap;
+      }
+
+      .downloader-code {
+        flex: 0 0 auto;
+        padding: 5px 8px 6px;
+        gap: 6px;
+        border-radius: 9px;
+      }
+
+      .downloader-code span { font-size: 7px; }
+      .downloader-code strong { font-size: 15px; }
+
+      .badge {
+        flex: 0 0 auto;
+        padding: 5px 7px;
+        font-size: 7px;
+      }
+
+      .download {
+        min-width: 132px;
+        min-height: 42px;
+        padding: 8px 12px;
+        gap: 7px;
+        border-radius: 10px;
+        font-size: 12px;
+      }
+
+      .download::after { font-size: 16px; }
+
+      footer { padding: 0 20px 16px; }
+    }
+
     @media (max-width: 560px) {
       .topbar-inner, main { width: min(100% - 24px, 1120px); }
       .topbar-inner { min-height: 92px; }
