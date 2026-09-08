@@ -280,6 +280,25 @@
       text-align: center;
     }
 
+    .upload-box {
+      display: grid;
+      min-height: 190px;
+      place-items: center;
+      gap: 10px;
+      border: 2px dashed rgba(135, 88, 255, .42);
+      border-radius: 18px;
+      padding: 24px 18px;
+      background: rgba(135, 88, 255, .07);
+      text-align: center;
+    }
+
+    .upload-box svg { width: 46px; height: 46px; color: #bdaaff; }
+    .upload-box h3 { margin: 0; font-size: 18px; }
+    .upload-box p { margin: 0; font-size: 13px; }
+    .upload-box input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+    .file-choice { min-height: 44px; }
+    .generate-button { width: 100%; min-height: 56px; margin-top: 14px; font-size: 15px; }
+
     .expiry {
       display: flex;
       align-items: center;
@@ -356,46 +375,27 @@
     <section class="hero">
       <span class="eyebrow">Gestor temporal</span>
       <h1>Configuraciones VPN,<br>listas en minutos.</h1>
-      <p>Pega el enlace temporal, genera otro enlace con caducidad y llévalo a Downloader mediante AFTVnews. Esta página no guarda ningún historial.</p>
+      <p>Selecciona el archivo de configuración y genera su enlace temporal. Después abriremos AFTVnews con el enlace preparado para pegar.</p>
     </section>
 
     <section class="steps" aria-label="Proceso de creación">
       <article class="card">
         <div class="step-head">
           <span class="step-number">01</span>
-          <div><h2>Obtener archivo</h2><p style="margin:0;font-size:13px">Pega el enlace recién creado.</p></div>
+          <div><h2>Subir configuración</h2><p style="margin:0;font-size:13px">Selecciona el archivo descargado en tu móvil.</p></div>
         </div>
 
-        <div class="field">
-          <label for="sourceUrl">Enlace temporal del .conf</label>
-          <input id="sourceUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://vpn2.fitbey.xyz/cnf/…">
+        <div class="upload-box">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h3>Archivo .conf o .config</h3>
+          <p id="selectedFile">Todavía no has elegido ningún archivo</p>
+          <label class="button secondary file-choice" for="fileInput">ELEGIR ARCHIVO</label>
+          <input id="fileInput" type="file" accept=".conf,.config,text/plain,application/octet-stream">
         </div>
 
-        <div class="field">
-          <label for="duration">Caducidad del nuevo enlace</label>
-          <select id="duration">
-            <option value="1h">1 hora</option>
-            <option value="12h" selected>12 horas — recomendado</option>
-            <option value="24h">24 horas</option>
-          </select>
-        </div>
-
-        <div class="actions">
-          <button class="button" id="processUrl" type="button">Procesar enlace</button>
-        </div>
+        <button class="button generate-button" id="uploadFile" type="button" disabled>GENERAR ENLACE TEMPORAL</button>
 
         <div class="status" id="sourceStatus" role="status" aria-live="polite"></div>
-
-        <div class="fallback" id="fallback">
-          <p>Si el servidor bloquea la lectura automática, descarga primero el archivo y selecciónalo aquí:</p>
-          <div class="actions" style="margin-top:0;margin-bottom:12px">
-            <button class="button secondary small" id="openOriginal" type="button">Descargar original</button>
-          </div>
-          <input id="fileInput" type="file" accept=".conf,text/plain,application/octet-stream">
-          <div class="actions">
-            <button class="button small" id="uploadFile" type="button">Subir archivo elegido</button>
-          </div>
-        </div>
       </article>
 
       <article class="card">
@@ -414,7 +414,7 @@
           <p class="simple-help">Cuando se abra AFTVnews, mantén pulsado en su casilla y toca <b>Pegar</b>.</p>
         </div>
 
-        <div class="status show loading" id="waitingLink">El enlace aparecerá aquí después de procesar el archivo.</div>
+        <div class="status show loading" id="waitingLink">El enlace aparecerá aquí después de subir el archivo.</div>
       </article>
 
       <article class="card">
@@ -451,14 +451,11 @@
       const LITTERBOX_API = 'https://litterbox.catbox.moe/resources/internals/api.php';
       const AFTV_URL = 'https://go.aftvnews.com/';
       const MAX_FILE_SIZE = 100 * 1024;
+      const UPLOAD_DURATION = '12h';
 
-      const sourceUrl = document.querySelector('#sourceUrl');
-      const duration = document.querySelector('#duration');
-      const processUrl = document.querySelector('#processUrl');
       const sourceStatus = document.querySelector('#sourceStatus');
-      const fallback = document.querySelector('#fallback');
-      const openOriginal = document.querySelector('#openOriginal');
       const fileInput = document.querySelector('#fileInput');
+      const selectedFile = document.querySelector('#selectedFile');
       const uploadFile = document.querySelector('#uploadFile');
       const linkResult = document.querySelector('#linkResult');
       const waitingLink = document.querySelector('#waitingLink');
@@ -474,21 +471,6 @@
       function setStatus(element, type, message) {
         element.className = `status show ${type}`;
         element.textContent = message;
-      }
-
-      function filenameFromUrl(url) {
-        try {
-          const name = decodeURIComponent(new URL(url).pathname.split('/').pop() || 'wireguard.conf');
-          return name.toLowerCase().endsWith('.conf') ? name : 'wireguard.conf';
-        } catch (_) {
-          return 'wireguard.conf';
-        }
-      }
-
-      function validateUrl(value) {
-        const parsed = new URL(value);
-        if (parsed.protocol !== 'https:') throw new Error('El enlace debe comenzar por https://');
-        return parsed.href;
       }
 
       async function copyText(value, button) {
@@ -513,7 +495,7 @@
       }
 
       function validateFile(file) {
-        if (!file) throw new Error('Selecciona primero un archivo .conf.');
+        if (!file) throw new Error('Selecciona primero un archivo .conf o .config.');
         if (file.size === 0) throw new Error('El archivo está vacío.');
         if (file.size > MAX_FILE_SIZE) throw new Error('El archivo es demasiado grande para ser una configuración VPN.');
       }
@@ -522,11 +504,10 @@
         validateFile(blob);
         const form = new FormData();
         form.append('reqtype', 'fileupload');
-        form.append('time', duration.value);
+        form.append('time', UPLOAD_DURATION);
         form.append('fileToUpload', new File([blob], filename, { type: 'application/octet-stream' }));
 
         setStatus(sourceStatus, 'loading', 'Subiendo la configuración al alojamiento temporal…');
-        processUrl.disabled = true;
         uploadFile.disabled = true;
 
         try {
@@ -537,65 +518,29 @@
           }
 
           generatedUrl.value = result;
-          const hours = duration.value.replace('h', '');
-          expiryText.textContent = `El archivo se eliminará automáticamente en ${hours} ${hours === '1' ? 'hora' : 'horas'}.`;
+          expiryText.textContent = 'El archivo se eliminará automáticamente en 12 horas.';
           linkResult.classList.add('show');
           waitingLink.style.display = 'none';
           setStatus(sourceStatus, 'success', 'Configuración guardada. Pulsa el botón grande para continuar.');
-          fallback.classList.remove('show');
           linkResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } finally {
-          processUrl.disabled = false;
-          uploadFile.disabled = false;
+          uploadFile.disabled = !fileInput.files.length;
         }
       }
 
-      async function processRemoteUrl() {
-        let url;
-        try {
-          url = validateUrl(sourceUrl.value.trim());
-        } catch (error) {
-          setStatus(sourceStatus, 'error', error.message || 'Introduce un enlace válido.');
-          return;
-        }
-
-        fallback.classList.remove('show');
-        setStatus(sourceStatus, 'loading', 'Descargando la configuración desde el enlace original…');
-        processUrl.disabled = true;
-
-        try {
-          const response = await fetch(url, { cache: 'no-store', redirect: 'follow' });
-          if (!response.ok) throw new Error(`El enlace original respondió con el error ${response.status}.`);
-          const blob = await response.blob();
-          validateFile(blob);
-          await uploadBlob(blob, filenameFromUrl(url));
-        } catch (error) {
-          setStatus(sourceStatus, 'error', 'El navegador no ha podido leer el enlace directamente. Usa la alternativa de abajo: descarga el .conf y selecciónalo; el resto será automático.');
-          fallback.classList.add('show');
-        } finally {
-          processUrl.disabled = false;
-        }
-      }
-
-      processUrl.addEventListener('click', processRemoteUrl);
-
-      sourceUrl.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') processRemoteUrl();
-      });
-
-      openOriginal.addEventListener('click', () => {
-        try {
-          window.open(validateUrl(sourceUrl.value.trim()), '_blank', 'noopener,noreferrer');
-        } catch (error) {
-          setStatus(sourceStatus, 'error', error.message || 'Introduce primero un enlace válido.');
-        }
+      fileInput.addEventListener('change', () => {
+        const file = fileInput.files[0];
+        selectedFile.textContent = file ? file.name : 'Todavía no has elegido ningún archivo';
+        uploadFile.disabled = !file;
+        sourceStatus.className = 'status';
       });
 
       uploadFile.addEventListener('click', async () => {
         try {
           const file = fileInput.files[0];
           validateFile(file);
-          await uploadBlob(file, file.name.toLowerCase().endsWith('.conf') ? file.name : 'wireguard.conf');
+          const filename = /\.(conf|config)$/i.test(file.name) ? file.name : 'wireguard.conf';
+          await uploadBlob(file, filename);
         } catch (error) {
           setStatus(sourceStatus, 'error', error.message || 'No se pudo subir el archivo.');
         }
