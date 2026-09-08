@@ -266,44 +266,19 @@
     .result.show { display: block; }
     .result input { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
 
-    .aftv-panel {
-      display: none;
-      margin-top: 18px;
-      overflow: hidden;
-      border: 1px solid rgba(135, 88, 255, .38);
-      border-radius: 18px;
-      background: #fff;
-      box-shadow: 0 18px 48px rgba(0, 0, 0, .28);
-    }
-
-    .aftv-panel.show { display: block; }
-
-    .aftv-guide {
-      padding: 15px 16px;
-      color: #fff;
-      background: linear-gradient(135deg, rgba(135, 88, 255, .96), rgba(245, 61, 120, .96));
-    }
-
-    .aftv-guide strong { display: block; margin-bottom: 4px; font-size: 16px; }
-    .aftv-guide span { font-size: 13px; line-height: 1.45; }
-
-    .aftv-frame {
-      display: block;
+    .primary-aftv {
       width: 100%;
-      height: 570px;
-      border: 0;
-      background: #fff;
+      min-height: 56px;
+      font-size: 15px;
+      letter-spacing: .015em;
     }
 
-    .aftv-fallback {
-      padding: 12px;
-      color: #463c4d;
-      background: #f4eff7;
+    .simple-help {
+      margin: 12px 0 0;
+      color: #d8cfdf;
+      font-size: 13px;
       text-align: center;
-      font-size: 12px;
     }
-
-    .aftv-fallback a { color: #7b36cf; font-weight: 900; }
 
     .expiry {
       display: flex;
@@ -363,7 +338,6 @@
       .hero { padding: 24px 20px; }
       .card { padding: 18px; }
       .button { width: 100%; }
-      .aftv-frame { height: 650px; }
     }
   </style>
 </head>
@@ -435,30 +409,12 @@
           <input id="generatedUrl" type="text" readonly>
           <div class="expiry" id="expiryText"></div>
           <div class="actions">
-            <button class="button small" id="copyLink" type="button">Copiar enlace</button>
-            <button class="button secondary small" id="copyAndOpen" type="button">Ver AFTVnews aquí</button>
+            <button class="button primary-aftv" id="copyAndOpen" type="button">COPIAR ENLACE Y ABRIR AFTVNEWS</button>
           </div>
+          <p class="simple-help">Cuando se abra AFTVnews, mantén pulsado en su casilla y toca <b>Pegar</b>.</p>
         </div>
 
         <div class="status show loading" id="waitingLink">El enlace aparecerá aquí después de procesar el archivo.</div>
-
-        <div class="aftv-panel" id="aftvPanel">
-          <div class="aftv-guide">
-            <strong>Enlace copiado. Ya estás en AFTVnews.</strong>
-            <span>Mantén pulsado en su casilla, toca <b>Pegar</b>, completa la verificación y genera el código.</span>
-          </div>
-          <iframe
-            class="aftv-frame"
-            id="aftvFrame"
-            title="Generador de códigos AFTVnews"
-            src="about:blank"
-            loading="lazy"
-            referrerpolicy="no-referrer"
-          ></iframe>
-          <div class="aftv-fallback">
-            Si el generador no aparece, <a href="https://go.aftvnews.com/" target="_blank" rel="noopener noreferrer">ábrelo aquí</a>.
-          </div>
-        </div>
       </article>
 
       <article class="card">
@@ -508,10 +464,7 @@
       const waitingLink = document.querySelector('#waitingLink');
       const generatedUrl = document.querySelector('#generatedUrl');
       const expiryText = document.querySelector('#expiryText');
-      const copyLink = document.querySelector('#copyLink');
       const copyAndOpen = document.querySelector('#copyAndOpen');
-      const aftvPanel = document.querySelector('#aftvPanel');
-      const aftvFrame = document.querySelector('#aftvFrame');
       const aftvCode = document.querySelector('#aftvCode');
       const codePreview = document.querySelector('#codePreview');
       const copyCode = document.querySelector('#copyCode');
@@ -532,11 +485,6 @@
         }
       }
 
-      function showAftv() {
-        if (aftvFrame.src === 'about:blank') aftvFrame.src = AFTV_URL;
-        aftvPanel.classList.add('show');
-      }
-
       function validateUrl(value) {
         const parsed = new URL(value);
         if (parsed.protocol !== 'https:') throw new Error('El enlace debe comenzar por https://');
@@ -545,7 +493,20 @@
 
       async function copyText(value, button) {
         if (!value) throw new Error('Todavía no hay nada que copiar.');
-        await navigator.clipboard.writeText(value);
+        try {
+          await navigator.clipboard.writeText(value);
+        } catch (_) {
+          const helper = document.createElement('textarea');
+          helper.value = value;
+          helper.setAttribute('readonly', '');
+          helper.style.position = 'fixed';
+          helper.style.opacity = '0';
+          document.body.appendChild(helper);
+          helper.select();
+          const copied = document.execCommand('copy');
+          helper.remove();
+          if (!copied) throw new Error('No se pudo copiar automáticamente.');
+        }
         const original = button.textContent;
         button.textContent = '¡Copiado!';
         setTimeout(() => { button.textContent = original; }, 1400);
@@ -580,21 +541,9 @@
           expiryText.textContent = `El archivo se eliminará automáticamente en ${hours} ${hours === '1' ? 'hora' : 'horas'}.`;
           linkResult.classList.add('show');
           waitingLink.style.display = 'none';
-          showAftv();
-          let copied = false;
-          try {
-            await navigator.clipboard.writeText(result);
-            copied = true;
-          } catch (_) {}
-          setStatus(
-            sourceStatus,
-            'success',
-            copied
-              ? 'Configuración guardada y enlace copiado. Pégalo en AFTVnews, justo debajo.'
-              : 'Configuración guardada. Pulsa “Copiar enlace” y pégalo en AFTVnews, justo debajo.'
-          );
+          setStatus(sourceStatus, 'success', 'Configuración guardada. Pulsa el botón grande para continuar.');
           fallback.classList.remove('show');
-          aftvPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          linkResult.scrollIntoView({ behavior: 'smooth', block: 'center' });
         } finally {
           processUrl.disabled = false;
           uploadFile.disabled = false;
@@ -652,18 +601,18 @@
         }
       });
 
-      copyLink.addEventListener('click', async () => {
-        try { await copyText(generatedUrl.value, copyLink); }
-        catch (error) { setStatus(sourceStatus, 'error', error.message); }
-      });
-
       copyAndOpen.addEventListener('click', async () => {
+        const popup = window.open('', '_blank');
         try {
           await copyText(generatedUrl.value, copyAndOpen);
-          showAftv();
-          aftvPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          if (popup) {
+            popup.location.href = AFTV_URL;
+          } else {
+            window.location.href = AFTV_URL;
+          }
         } catch (error) {
-          setStatus(sourceStatus, 'error', error.message);
+          if (popup) popup.close();
+          setStatus(sourceStatus, 'error', `${error.message} Copia el enlace manualmente y vuelve a pulsar el botón.`);
         }
       });
 
