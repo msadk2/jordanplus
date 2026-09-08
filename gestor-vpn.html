@@ -311,22 +311,6 @@
 
     .expiry::before { width: 8px; height: 8px; border-radius: 50%; background: var(--green); content: ""; }
 
-    .code-preview {
-      display: grid;
-      min-height: 72px;
-      margin-top: 14px;
-      place-items: center;
-      border: 1px solid rgba(255, 138, 52, .32);
-      border-radius: 16px;
-      color: #fff;
-      background: rgba(255, 138, 52, .08);
-      font-size: clamp(27px, 5vw, 38px);
-      font-weight: 950;
-      letter-spacing: .1em;
-    }
-
-    .code-preview.empty { color: #84798d; font-size: 14px; letter-spacing: 0; }
-
     .notice {
       display: flex;
       gap: 11px;
@@ -374,7 +358,7 @@
 
     <section class="hero">
       <span class="eyebrow">Gestor temporal</span>
-      <h1>Configuraciones VPN,<br>listas en minutos.</h1>
+      <h1>Configuración WireGuard</h1>
       <p>Selecciona el archivo de configuración y genera su enlace temporal. Después abriremos AFTVnews con el enlace preparado para pegar.</p>
     </section>
 
@@ -417,23 +401,6 @@
         <div class="status show loading" id="waitingLink">El enlace aparecerá aquí después de subir el archivo.</div>
       </article>
 
-      <article class="card">
-        <div class="step-head">
-          <span class="step-number">03</span>
-          <div><h2>Código Downloader</h2><p style="margin:0;font-size:13px">Pega el código obtenido.</p></div>
-        </div>
-
-        <div class="field">
-          <label for="aftvCode">Código de AFTVnews</label>
-          <input id="aftvCode" type="text" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Ejemplo: 1234567">
-        </div>
-        <div class="code-preview empty" id="codePreview">Esperando código</div>
-        <div class="actions">
-          <button class="button small" id="copyCode" type="button">Copiar código</button>
-          <button class="button secondary small" id="testCode" type="button">Probar código</button>
-        </div>
-        <div class="status" id="codeStatus" role="status" aria-live="polite"></div>
-      </article>
     </section>
 
     <aside class="notice">
@@ -462,11 +429,6 @@
       const generatedUrl = document.querySelector('#generatedUrl');
       const expiryText = document.querySelector('#expiryText');
       const copyAndOpen = document.querySelector('#copyAndOpen');
-      const aftvCode = document.querySelector('#aftvCode');
-      const codePreview = document.querySelector('#codePreview');
-      const copyCode = document.querySelector('#copyCode');
-      const testCode = document.querySelector('#testCode');
-      const codeStatus = document.querySelector('#codeStatus');
 
       function setStatus(element, type, message) {
         element.className = `status show ${type}`;
@@ -561,31 +523,6 @@
         }
       });
 
-      aftvCode.addEventListener('input', () => {
-        const clean = aftvCode.value.replace(/\D/g, '').slice(0, 12);
-        aftvCode.value = clean;
-        codePreview.textContent = clean || 'Esperando código';
-        codePreview.classList.toggle('empty', !clean);
-        codeStatus.className = 'status';
-      });
-
-      copyCode.addEventListener('click', async () => {
-        try {
-          if (!aftvCode.value) throw new Error('Pega primero el código de AFTVnews.');
-          await copyText(aftvCode.value, copyCode);
-          setStatus(codeStatus, 'success', 'Código copiado correctamente.');
-        } catch (error) {
-          setStatus(codeStatus, 'error', error.message);
-        }
-      });
-
-      testCode.addEventListener('click', () => {
-        if (!aftvCode.value) {
-          setStatus(codeStatus, 'error', 'Pega primero el código de AFTVnews.');
-          return;
-        }
-        window.open(`https://aftv.news/${encodeURIComponent(aftvCode.value)}`, '_blank', 'noopener,noreferrer');
-      });
     })();
   </script>
 </body>
