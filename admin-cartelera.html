@@ -32,6 +32,23 @@
         <label class="field-label field-spacer" for="loginPassword">Contraseña</label>
         <input id="loginPassword" type="password" autocomplete="current-password" required>
         <button id="loginButton" class="auth-submit" type="submit">ENTRAR</button>
+        <button id="forgotPasswordButton" class="button-link" type="button">HE OLVIDADO LA CONTRASEÑA</button>
+      </form>
+    </section>
+  </main>
+
+  <main id="recoveryScreen" class="site-shell auth-main" hidden>
+    <section class="panel auth-card">
+      <p class="brand-kicker">Recuperar acceso</p>
+      <h2>Crea una contraseña nueva</h2>
+      <p class="panel-help">Escríbela dos veces para confirmar el cambio.</p>
+      <div id="recoveryStatus" class="status-banner" role="status" aria-live="polite"></div>
+      <form id="recoveryForm">
+        <label class="field-label" for="recoveryPassword">Nueva contraseña</label>
+        <input id="recoveryPassword" type="password" autocomplete="new-password" minlength="6" required placeholder="Mínimo 6 caracteres">
+        <label class="field-label field-spacer" for="recoveryPasswordConfirm">Repite la contraseña</label>
+        <input id="recoveryPasswordConfirm" type="password" autocomplete="new-password" minlength="6" required>
+        <button id="recoveryButton" class="auth-submit" type="submit">GUARDAR CONTRASEÑA</button>
       </form>
     </section>
   </main>
@@ -130,8 +147,15 @@
       const loginUsername = document.getElementById("loginUsername");
       const loginPassword = document.getElementById("loginPassword");
       const loginButton = document.getElementById("loginButton");
+      const forgotPasswordButton = document.getElementById("forgotPasswordButton");
       const loginStatus = document.getElementById("loginStatus");
       const logoutButton = document.getElementById("logoutButton");
+      const recoveryScreen = document.getElementById("recoveryScreen");
+      const recoveryForm = document.getElementById("recoveryForm");
+      const recoveryPassword = document.getElementById("recoveryPassword");
+      const recoveryPasswordConfirm = document.getElementById("recoveryPasswordConfirm");
+      const recoveryButton = document.getElementById("recoveryButton");
+      const recoveryStatus = document.getElementById("recoveryStatus");
       const imageInput = document.getElementById("imageInput");
       const uploadZone = document.getElementById("uploadZone");
       const imagePreview = document.getElementById("imagePreview");
@@ -176,7 +200,20 @@
       function setSignedIn(signedIn) {
         authScreen.hidden = signedIn;
         adminWorkspace.hidden = !signedIn;
+        recoveryScreen.hidden = true;
         logoutButton.hidden = !signedIn;
+      }
+
+      function showRecovery() {
+        authScreen.hidden = true;
+        adminWorkspace.hidden = true;
+        recoveryScreen.hidden = false;
+        logoutButton.hidden = true;
+        window.setTimeout(function () { recoveryPassword.focus(); }, 0);
+      }
+
+      function cleanRecoveryUrl() {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
       }
 
       async function readAdminConfig() {
@@ -217,14 +254,28 @@
         db = window.supabase.createClient(
           String(config.supabaseUrl).replace(/\/$/, ""),
           String(config.supabaseKey),
-          { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false } }
+          { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
         );
+
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const recoveryRequested = hashParams.get("type") === "recovery";
+        const recoveryError = hashParams.get("error_description");
+        if (recoveryError) {
+          cleanRecoveryUrl();
+          setSignedIn(false);
+          showLoginStatus("El enlace de recuperación ha caducado. Solicita uno nuevo y abre únicamente el último correo recibido.", "error");
+          return;
+        }
 
         const sessionResult = await db.auth.getSession();
         const user = sessionResult.data.session && sessionResult.data.session.user;
         if (user && await verifyAdmin(user).catch(function () { return false; })) {
-          setSignedIn(true);
-          loadPublishedAgenda();
+          if (recoveryRequested) {
+            showRecovery();
+          } else {
+            setSignedIn(true);
+            loadPublishedAgenda();
+          }
         } else {
           if (user) await db.auth.signOut();
           setSignedIn(false);
@@ -236,6 +287,59 @@
           }
         }
       }
+
+      forgotPasswordButton.addEventListener("click", async function () {
+        if (!db) return;
+        forgotPasswordButton.disabled = true;
+        forgotPasswordButton.textContent = "ENVIANDO…";
+        try {
+          const redirectTo = window.location.origin + window.location.pathname;
+          const result = await db.auth.resetPasswordForEmail(String(config.adminEmail), { redirectTo: redirectTo });
+          if (result.error) throw result.error;
+          showLoginStatus("Correo enviado. Abre el último mensaje recibido y pulsa el enlace de recuperación.", "success");
+        } catch (error) {
+          console.error(error);
+          showLoginStatus("No se pudo enviar el correo. Revisa la dirección autorizada en Supabase.", "error");
+        } finally {
+          forgotPasswordButton.disabled = false;
+          forgotPasswordButton.textContent = "HE OLVIDADO LA CONTRASEÑA";
+        }
+      });
+
+      recoveryForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+        const password = recoveryPassword.value;
+        if (password.length < 6) {
+          recoveryStatus.textContent = "La contraseña debe tener al menos 6 caracteres.";
+          recoveryStatus.className = "status-banner visible error";
+          return;
+        }
+        if (password !== recoveryPasswordConfirm.value) {
+          recoveryStatus.textContent = "Las dos contraseñas no coinciden.";
+          recoveryStatus.className = "status-banner visible error";
+          return;
+        }
+
+        recoveryButton.disabled = true;
+        recoveryButton.textContent = "GUARDANDO…";
+        try {
+          const result = await db.auth.updateUser({ password: password });
+          if (result.error) throw result.error;
+          cleanRecoveryUrl();
+          recoveryPassword.value = "";
+          recoveryPasswordConfirm.value = "";
+          setSignedIn(true);
+          await loadPublishedAgenda();
+          showStatus("Contraseña cambiada correctamente. Ya tienes acceso al administrador.", "success");
+        } catch (error) {
+          console.error(error);
+          recoveryStatus.textContent = "No se pudo guardar la contraseña. Solicita un enlace de recuperación nuevo.";
+          recoveryStatus.className = "status-banner visible error";
+        } finally {
+          recoveryButton.disabled = false;
+          recoveryButton.textContent = "GUARDAR CONTRASEÑA";
+        }
+      });
 
       loginForm.addEventListener("submit", async function (event) {
         event.preventDefault();
