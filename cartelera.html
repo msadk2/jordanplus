@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="index, follow">
+  <title>Cartelera · SpinningTV</title>
+  <meta name="description" content="Eventos deportivos disponibles en SpinningTV.">
+  <link rel="stylesheet" href="cartelera.css">
+</head>
+<body>
+  <header class="site-shell site-header">
+    <div class="brand">
+      <img src="logo.png" alt="" onerror="this.remove()">
+      <div class="brand-copy">
+        <p class="brand-kicker">Eventos deportivos</p>
+        <h1 class="brand-name">SpinningTV</h1>
+      </div>
+    </div>
+    <div id="updated" class="updated">Cargando cartelera…</div>
+  </header>
+
+  <main class="site-shell public-main">
+    <h2 class="public-title">Cartelera</h2>
+    <div id="status" class="status-banner" role="status" aria-live="polite"></div>
+    <section class="agenda-card">
+      <div id="agenda"><div class="empty-agenda">Cargando eventos…</div></div>
+    </section>
+  </main>
+
+  <script src="config-cartelera.js"></script>
+  <script src="cartelera-common.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      const config = window.SPINNINGTV_CONFIG || {};
+      const agenda = document.getElementById("agenda");
+      const updated = document.getElementById("updated");
+      const status = document.getElementById("status");
+      let lastContent = null;
+      let db = null;
+
+      function formatDate(value) {
+        if (!value) return "Sin actualizaciones todavía";
+        return "Actualizada " + new Intl.DateTimeFormat("es-ES", {
+          dateStyle: "short",
+          timeStyle: "short"
+        }).format(new Date(value));
+      }
+
+      async function loadAgenda() {
+        if (!db) {
+          updated.textContent = "Pendiente de configuración";
+          status.textContent = "La cartelera todavía no está conectada.";
+          status.className = "status-banner visible error";
+          window.SpinningTV.renderAgenda("", agenda);
+          return;
+        }
+
+        try {
+          const result = await db
+            .from("cartelera")
+            .select("content, updated_at")
+            .eq("id", 1)
+            .single();
+          if (result.error) throw result.error;
+          const content = String(result.data.content || "");
+          if (content !== lastContent) {
+            window.SpinningTV.renderAgenda(content, agenda);
+            lastContent = content;
+          }
+          updated.textContent = formatDate(result.data.updated_at);
+          status.className = "status-banner";
+        } catch (error) {
+          console.error(error);
+          updated.textContent = "No se pudo actualizar";
+          status.textContent = "No ha sido posible cargar la cartelera. Se volverá a intentar automáticamente.";
+          status.className = "status-banner visible error";
+        }
+      }
+
+      if (window.supabase && /^https:\/\/.+\.supabase\.co$/i.test(String(config.supabaseUrl || "")) && String(config.supabaseKey || "").length > 20) {
+        db = window.supabase.createClient(
+          String(config.supabaseUrl).replace(/\/$/, ""),
+          String(config.supabaseKey),
+          { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
+        );
+      }
+
+      loadAgenda();
+      const refreshMs = Math.max(15, Number(config.refreshSeconds) || 60) * 1000;
+      setInterval(loadAgenda, refreshMs);
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) loadAgenda();
+      });
+    })();
+  </script>
+</body>
+</html>
