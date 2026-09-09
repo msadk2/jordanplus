@@ -440,6 +440,16 @@
       const renameMap = document.querySelector('#renameMap');
       const copyAndOpen = document.querySelector('#copyAndOpen');
 
+      function getBrowserName() {
+        const userAgent = navigator.userAgent || '';
+        if (/Edg\//i.test(userAgent)) return 'Microsoft Edge';
+        if (/OPR\//i.test(userAgent) || /Opera/i.test(userAgent)) return 'Opera';
+        if (/Firefox\//i.test(userAgent)) return 'Mozilla Firefox';
+        if (/Chrome\//i.test(userAgent)) return 'Google Chrome';
+        if (/Safari\//i.test(userAgent)) return 'Safari';
+        return 'el navegador actual';
+      }
+
       function setStatus(element, type, message) {
         element.className = `status show ${type}`;
         element.textContent = message;
@@ -535,7 +545,7 @@
 
           if (!response.ok || !/^https:\/\/litter\.catbox\.moe\/[A-Za-z0-9._-]+$/.test(result)) {
             if (/^No file!?$/i.test(result)) {
-              throw new Error('Opera está bloqueando el envío del archivo. Desactiva temporalmente la VPN y el bloqueador de publicidad de Opera y vuelve a intentarlo.');
+              throw new Error(`Error de subida en ${getBrowserName()}: el servidor no ha recibido el archivo (No file!). Desactiva temporalmente la VPN (WireGuard, NordVPN u otra) y la protección web o el bloqueador del navegador, y vuelve a intentarlo.`);
             }
             throw new Error(result || `Error de subida (${response.status}).`);
           }
