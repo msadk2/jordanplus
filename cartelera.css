@@ -338,6 +338,57 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   box-shadow: 0 10px 26px rgba(255, 181, 71, .18);
   letter-spacing: .015em;
 }
+.tomorrow-box {
+  display: grid;
+  gap: .9rem;
+  margin-top: 1rem;
+  border: 1px solid rgba(77, 112, 151, .72);
+  border-radius: 16px;
+  padding: 1rem;
+  background: linear-gradient(145deg, rgba(22, 35, 56, .92), rgba(9, 19, 33, .76));
+}
+.tomorrow-box-copy { display: grid; gap: .18rem; }
+.tomorrow-box-copy strong { color: var(--text); font-size: 1rem; }
+.tomorrow-box-copy span { color: var(--muted); font-size: .88rem; }
+.tomorrow-actions { display: flex; flex-wrap: wrap; gap: .7rem; }
+.tomorrow-actions > * { flex: 1 1 190px; }
+.tomorrow-result {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 360px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg);
+  scrollbar-color: var(--cyan-dark) var(--panel-2);
+  scrollbar-width: thin;
+}
+.tomorrow-result::-webkit-scrollbar { width: 9px; }
+.tomorrow-result::-webkit-scrollbar-track { background: var(--panel-2); }
+.tomorrow-result::-webkit-scrollbar-thumb { border-radius: 999px; background: var(--cyan-dark); }
+.tomorrow-result-heading {
+  position: sticky;
+  z-index: 3;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .72rem .8rem;
+  border-bottom: 1px solid var(--line);
+  background: rgba(7, 16, 29, .96);
+  backdrop-filter: blur(8px);
+}
+.tomorrow-result-heading strong { font-size: .88rem; }
+.tomorrow-result-heading span {
+  flex: 0 0 auto;
+  color: var(--cyan);
+  font-size: .78rem;
+  font-weight: 800;
+}
+.tomorrow-result .agenda-groups { gap: .65rem; padding: .65rem; }
+.tomorrow-result .agenda-sport-heading { padding: .6rem .7rem; }
+.tomorrow-result .agenda-sport-heading h3 { font-size: .9rem; }
+.tomorrow-result .agenda-table td { padding: .62rem .7rem; font-size: .88rem; }
 .method-divider {
   display: flex;
   align-items: center;
