@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Panel de cartelera · SpinningTV</title>
-  <meta name="description" content="Panel para leer y publicar la cartelera de SpinningTV.">
-  <link rel="stylesheet" href="cartelera.css?v=20260910-import1">
+  <meta name="description" content="Panel para importar y publicar la cartelera de SpinningTV.">
+  <link rel="stylesheet" href="cartelera.css?v=20260910-groups1">
 </head>
 <body>
   <header class="site-shell site-header">
@@ -25,51 +25,48 @@
     <div class="admin-grid">
       <div class="admin-stack">
         <section class="panel">
-          <h2><span class="step-number">1.</span>Añade los eventos</h2>
+          <h2><span class="step-number">1.</span>Importa los eventos</h2>
           <div class="import-box">
             <div class="import-box-copy">
               <strong>Programación deportiva de hoy</strong>
-              <span>Importa la lista completa y revísala antes de publicarla.</span>
+              <span>Recoge automáticamente la programación y la ordena por deportes.</span>
             </div>
             <button id="importMarcaButton" class="import-button" type="button">IMPORTAR EVENTOS DE HOY</button>
-          </div>
-
-          <div class="method-divider"><span>O utiliza una captura</span></div>
-          <p class="panel-help">Selecciona una imagen o haz una foto. No se publicará la captura, solamente el texto.</p>
-          <div id="uploadZone" class="upload-zone">
-            <input id="imageInput" type="file" accept="image/*" aria-label="Seleccionar captura con eventos">
-            <div class="upload-label">
-              <strong>Elegir captura</strong>
-              <span>JPG, PNG o foto desde el móvil</span>
-              <div id="fileName" class="file-name"></div>
-            </div>
-          </div>
-          <img id="imagePreview" class="image-preview" alt="Vista previa de la captura seleccionada">
-          <div id="progressWrap" class="progress-wrap">
-            <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
-            <p id="progressText" class="progress-text">Preparando reconocimiento…</p>
-          </div>
-          <div class="actions">
-            <button id="ocrButton" type="button" disabled>LEER TEXTO DE LA CAPTURA</button>
           </div>
         </section>
 
         <section class="panel">
           <h2><span class="step-number">2.</span>Revisa el texto</h2>
-          <p class="panel-help">Corrige nombres u horarios si el reconocimiento no los ha leído bien. Cada línea será una fila.</p>
+          <p class="panel-help">Comprueba los nombres y horarios. Cada línea será un evento.</p>
           <label class="field-label" for="agendaText">Eventos detectados</label>
-          <textarea id="agendaText" spellcheck="false" placeholder="Aquí aparecerá el texto de la captura…"></textarea>
+          <textarea id="agendaText" spellcheck="false" placeholder="Aquí aparecerán los eventos importados…"></textarea>
           <div class="actions">
             <button id="previewButton" class="button-secondary" type="button">ACTUALIZAR VISTA PREVIA</button>
-            <button id="clearButton" class="button-secondary" type="button">BORRAR TODO</button>
+            <button id="clearButton" class="button-secondary" type="button">LIMPIAR BORRADOR</button>
           </div>
         </section>
       </div>
 
       <div class="admin-stack">
         <section class="panel">
-          <h2><span class="step-number">3.</span>Vista previa</h2>
-          <p class="panel-help">Así verán la cartelera los clientes.</p>
+          <h2><span class="step-number">3.</span>Publicar</h2>
+          <p class="panel-help">La cartelera quedará visible inmediatamente para los clientes.</p>
+          <div class="actions">
+            <button id="publishButton" class="button-publish" type="button">PUBLICAR CARTELERA</button>
+            <a id="openPublic" class="button button-secondary" href="cartelera.html" target="_blank" rel="noopener">VER CARTELERA PÚBLICA</a>
+          </div>
+          <div class="danger-zone">
+            <div>
+              <strong>Vaciar la cartelera pública</strong>
+              <span>Elimina los eventos que están viendo los clientes.</span>
+            </div>
+            <button id="deletePublicButton" class="button-danger" type="button">BORRAR CARTELERA PÚBLICA</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2><span class="step-number">4.</span>Vista previa</h2>
+          <p class="panel-help">Puedes desplazarte dentro del recuadro sin alargar el panel.</p>
           <div class="preview-frame">
             <div class="agenda-day agenda-day-preview">
               <span>Eventos del día</span>
@@ -79,46 +76,28 @@
           </div>
         </section>
 
-        <section class="panel">
-          <h2><span class="step-number">4.</span>Publicar</h2>
-          <p class="panel-help">La cartelera quedará visible inmediatamente para los clientes.</p>
-          <div class="actions">
-            <button id="publishButton" class="button-publish" type="button">PUBLICAR CARTELERA</button>
-            <a id="openPublic" class="button button-secondary" href="cartelera.html" target="_blank" rel="noopener">VER CARTELERA PÚBLICA</a>
-          </div>
-        </section>
-
       </div>
     </div>
   </main>
 
   <script src="config-cartelera.js?v=20260910"></script>
-  <script src="cartelera-common.js?v=20260910-premium1"></script>
+  <script src="cartelera-common.js?v=20260910-groups1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
   <script>
     (function () {
       "use strict";
 
       const config = window.SPINNINGTV_CONFIG || {};
-      const imageInput = document.getElementById("imageInput");
-      const uploadZone = document.getElementById("uploadZone");
-      const imagePreview = document.getElementById("imagePreview");
-      const fileName = document.getElementById("fileName");
       const importMarcaButton = document.getElementById("importMarcaButton");
-      const ocrButton = document.getElementById("ocrButton");
       const agendaText = document.getElementById("agendaText");
       const agendaPreview = document.getElementById("agendaPreview");
       const previewDate = document.getElementById("previewDate");
       const previewButton = document.getElementById("previewButton");
       const clearButton = document.getElementById("clearButton");
       const publishButton = document.getElementById("publishButton");
+      const deletePublicButton = document.getElementById("deletePublicButton");
       const globalStatus = document.getElementById("globalStatus");
-      const progressWrap = document.getElementById("progressWrap");
-      const progressBar = document.getElementById("progressBar");
-      const progressText = document.getElementById("progressText");
       const openPublic = document.getElementById("openPublic");
-      let selectedFile = null;
       let db = null;
 
       const draft = localStorage.getItem("spinningtv-cartelera-draft");
@@ -169,34 +148,6 @@
         window.SpinningTV.renderAgenda(value, agendaPreview);
       }
 
-      function chooseFile(file) {
-        if (!file || !file.type.startsWith("image/")) {
-          showStatus("Selecciona una imagen JPG o PNG.", "error");
-          return;
-        }
-        selectedFile = file;
-        fileName.textContent = file.name;
-        imagePreview.src = URL.createObjectURL(file);
-        imagePreview.style.display = "block";
-        ocrButton.disabled = false;
-        globalStatus.className = "status-banner";
-      }
-
-      imageInput.addEventListener("change", function () { chooseFile(imageInput.files[0]); });
-      ["dragenter", "dragover"].forEach(function (eventName) {
-        uploadZone.addEventListener(eventName, function (event) {
-          event.preventDefault();
-          uploadZone.classList.add("dragging");
-        });
-      });
-      ["dragleave", "drop"].forEach(function (eventName) {
-        uploadZone.addEventListener(eventName, function (event) {
-          event.preventDefault();
-          uploadZone.classList.remove("dragging");
-        });
-      });
-      uploadZone.addEventListener("drop", function (event) { chooseFile(event.dataTransfer.files[0]); });
-
       importMarcaButton.addEventListener("click", async function () {
         if (!db) {
           showStatus("Falta conectar Supabase.", "error");
@@ -228,57 +179,12 @@
         } catch (error) {
           console.error(error);
           showStatus(
-            "No se han podido importar los eventos de MARCA en este momento. Puedes utilizar una captura como alternativa.",
+            "No se han podido importar los eventos en este momento. Espera unos minutos y vuelve a intentarlo.",
             "error"
           );
         } finally {
           importMarcaButton.disabled = false;
           importMarcaButton.textContent = "IMPORTAR EVENTOS DE HOY";
-        }
-      });
-
-      ocrButton.addEventListener("click", async function () {
-        if (!selectedFile) return;
-        if (!window.Tesseract) {
-          showStatus("No se ha podido cargar el lector de texto. Comprueba la conexión e inténtalo de nuevo.", "error");
-          return;
-        }
-
-        ocrButton.disabled = true;
-        progressWrap.classList.add("visible");
-        progressBar.style.width = "2%";
-        progressText.textContent = "Preparando reconocimiento…";
-
-        let worker;
-        try {
-          worker = await Tesseract.createWorker("spa+eng", 1, {
-            logger: function (message) {
-              const progress = Math.max(0, Math.min(1, message.progress || 0));
-              progressBar.style.width = Math.round(progress * 100) + "%";
-              progressText.textContent = message.status === "recognizing text"
-                ? "Leyendo texto… " + Math.round(progress * 100) + "%"
-                : "Preparando el lector…";
-            }
-          });
-          const result = await worker.recognize(selectedFile);
-          const cleaned = result.data.text
-            .replace(/\r/g, "")
-            .split("\n")
-            .map(function (line) { return line.replace(/\s+/g, " ").trim(); })
-            .filter(Boolean)
-            .join("\n");
-
-          agendaText.value = cleaned;
-          updatePreview();
-          progressBar.style.width = "100%";
-          progressText.textContent = "Texto leído. Revísalo antes de publicar.";
-          showStatus("Captura leída correctamente. Revisa los nombres y horarios.", "success");
-        } catch (error) {
-          console.error(error);
-          showStatus("No se pudo leer la captura en " + window.SpinningTV.browserName() + ". Prueba con una imagen más nítida.", "error");
-        } finally {
-          if (worker) await worker.terminate();
-          ocrButton.disabled = false;
         }
       });
 
@@ -290,6 +196,40 @@
         agendaText.value = "";
         localStorage.removeItem("spinningtv-cartelera-draft");
         updatePreview();
+        showStatus("Borrador limpiado. La cartelera pública no se ha modificado.", "success");
+      });
+
+      deletePublicButton.addEventListener("click", async function () {
+        if (!db) {
+          showStatus("Falta conectar Supabase.", "error");
+          return;
+        }
+        const confirmed = window.confirm(
+          "¿Seguro que quieres borrar la cartelera pública? Los clientes dejarán de ver todos los eventos."
+        );
+        if (!confirmed) return;
+
+        deletePublicButton.disabled = true;
+        deletePublicButton.textContent = "BORRANDO…";
+        try {
+          const result = await db
+            .from("cartelera")
+            .update({ content: "", updated_at: new Date().toISOString() })
+            .eq("id", 1)
+            .select("updated_at")
+            .single();
+          if (result.error) throw result.error;
+          agendaText.value = "";
+          localStorage.removeItem("spinningtv-cartelera-draft");
+          updatePreview();
+          showStatus("Cartelera pública borrada. Los clientes ya no verán eventos.", "success");
+        } catch (error) {
+          console.error(error);
+          showStatus("No se pudo borrar la cartelera pública. Comprueba la conexión e inténtalo de nuevo.", "error");
+        } finally {
+          deletePublicButton.disabled = false;
+          deletePublicButton.textContent = "BORRAR CARTELERA PÚBLICA";
+        }
       });
 
       publishButton.addEventListener("click", async function () {
