@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Panel de cartelera · SpinningTV</title>
   <meta name="description" content="Panel para leer y publicar la cartelera de SpinningTV.">
-  <link rel="stylesheet" href="cartelera.css">
+  <link rel="stylesheet" href="cartelera.css?v=20260910-import1">
 </head>
 <body>
   <header class="site-shell site-header">
@@ -25,7 +25,16 @@
     <div class="admin-grid">
       <div class="admin-stack">
         <section class="panel">
-          <h2><span class="step-number">1.</span>Sube la captura</h2>
+          <h2><span class="step-number">1.</span>Añade los eventos</h2>
+          <div class="import-box">
+            <div class="import-box-copy">
+              <strong>Programación deportiva de hoy</strong>
+              <span>Importa la lista completa y revísala antes de publicarla.</span>
+            </div>
+            <button id="importMarcaButton" class="import-button" type="button">IMPORTAR EVENTOS DE HOY</button>
+          </div>
+
+          <div class="method-divider"><span>O utiliza una captura</span></div>
           <p class="panel-help">Selecciona una imagen o haz una foto. No se publicará la captura, solamente el texto.</p>
           <div id="uploadZone" class="upload-zone">
             <input id="imageInput" type="file" accept="image/*" aria-label="Seleccionar captura con eventos">
@@ -61,7 +70,13 @@
         <section class="panel">
           <h2><span class="step-number">3.</span>Vista previa</h2>
           <p class="panel-help">Así verán la cartelera los clientes.</p>
-          <div id="agendaPreview" class="preview-frame"></div>
+          <div class="preview-frame">
+            <div class="agenda-day agenda-day-preview">
+              <span>Eventos del día</span>
+              <strong id="previewDate"></strong>
+            </div>
+            <div id="agendaPreview"></div>
+          </div>
         </section>
 
         <section class="panel">
@@ -78,7 +93,7 @@
   </main>
 
   <script src="config-cartelera.js?v=20260910"></script>
-  <script src="cartelera-common.js"></script>
+  <script src="cartelera-common.js?v=20260910-premium1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
   <script>
@@ -90,9 +105,11 @@
       const uploadZone = document.getElementById("uploadZone");
       const imagePreview = document.getElementById("imagePreview");
       const fileName = document.getElementById("fileName");
+      const importMarcaButton = document.getElementById("importMarcaButton");
       const ocrButton = document.getElementById("ocrButton");
       const agendaText = document.getElementById("agendaText");
       const agendaPreview = document.getElementById("agendaPreview");
+      const previewDate = document.getElementById("previewDate");
       const previewButton = document.getElementById("previewButton");
       const clearButton = document.getElementById("clearButton");
       const publishButton = document.getElementById("publishButton");
@@ -106,6 +123,7 @@
 
       const draft = localStorage.getItem("spinningtv-cartelera-draft");
       if (draft) agendaText.value = draft;
+      previewDate.textContent = window.SpinningTV.formatAgendaDate(new Date());
       window.SpinningTV.renderAgenda(agendaText.value, agendaPreview);
 
       if (config.publicPageUrl) openPublic.href = config.publicPageUrl;
@@ -178,6 +196,46 @@
         });
       });
       uploadZone.addEventListener("drop", function (event) { chooseFile(event.dataTransfer.files[0]); });
+
+      importMarcaButton.addEventListener("click", async function () {
+        if (!db) {
+          showStatus("Falta conectar Supabase.", "error");
+          return;
+        }
+
+        importMarcaButton.disabled = true;
+        importMarcaButton.textContent = "IMPORTANDO…";
+        showStatus("Consultando todos los eventos deportivos de hoy…", "");
+
+        try {
+          const result = await db.functions.invoke("importar-marca", { body: {} });
+          if (result.error) throw result.error;
+
+          const data = result.data || {};
+          const importedText = String(data.text || "").trim();
+          if (!data.ok || !importedText) {
+            throw new Error(data.error || "No se han encontrado eventos");
+          }
+
+          agendaText.value = importedText;
+          localStorage.setItem("spinningtv-cartelera-draft", importedText);
+          updatePreview();
+          showStatus(
+            "Se han importado " + Number(data.count || 0) + " eventos. Revísalos y después pulsa PUBLICAR CARTELERA.",
+            "success"
+          );
+          agendaText.scrollIntoView({ behavior: "smooth", block: "center" });
+        } catch (error) {
+          console.error(error);
+          showStatus(
+            "No se han podido importar los eventos de MARCA en este momento. Puedes utilizar una captura como alternativa.",
+            "error"
+          );
+        } finally {
+          importMarcaButton.disabled = false;
+          importMarcaButton.textContent = "IMPORTAR EVENTOS DE HOY";
+        }
+      });
 
       ocrButton.addEventListener("click", async function () {
         if (!selectedFile) return;

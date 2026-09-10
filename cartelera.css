@@ -232,6 +232,47 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .panel-help { margin: 0 0 1rem; color: var(--muted); font-size: .92rem; }
 .step-number { color: var(--gold); margin-right: .35rem; }
 
+.import-box {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  border: 1px solid rgba(40, 213, 223, .42);
+  border-radius: 16px;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(255, 181, 71, .12), transparent 55%),
+    linear-gradient(145deg, rgba(40, 213, 223, .10), rgba(9, 19, 33, .7));
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .2);
+}
+.import-box-copy { display: grid; gap: .2rem; }
+.import-box-copy strong { color: var(--text); font-size: 1.05rem; }
+.import-box-copy span { color: var(--muted); font-size: .9rem; }
+.import-button {
+  width: 100%;
+  min-height: 58px;
+  color: #061219;
+  background: linear-gradient(135deg, var(--gold), #ffe09f);
+  box-shadow: 0 10px 26px rgba(255, 181, 71, .18);
+  letter-spacing: .015em;
+}
+.method-divider {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin: 1.25rem 0 1rem;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.method-divider::before, .method-divider::after {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  content: "";
+}
+
 .upload-zone {
   position: relative;
   display: grid;
