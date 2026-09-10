@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Panel de cartelera · SpinningTV</title>
   <meta name="description" content="Panel para importar y publicar la cartelera de SpinningTV.">
-  <link rel="stylesheet" href="cartelera.css?v=20260910-channels1">
+  <link rel="stylesheet" href="cartelera.css?v=20260910-publiclink1">
 </head>
 <body>
   <header class="site-shell site-header">
@@ -64,9 +64,17 @@
         <section class="panel">
           <h2><span class="step-number">4.</span>Publicar</h2>
           <p class="panel-help">La cartelera quedará visible inmediatamente para los clientes.</p>
-          <div class="actions">
+          <div class="actions publish-actions">
             <button id="publishButton" class="button-publish" type="button">PUBLICAR CARTELERA</button>
-            <a id="openPublic" class="button button-secondary" href="cartelera.html" target="_blank" rel="noopener">VER CARTELERA PÚBLICA</a>
+          </div>
+          <div class="public-link-box">
+            <label class="public-link-label" for="publicUrlField">Enlace de la cartelera pública</label>
+            <input id="publicUrlField" type="text" value="" readonly aria-label="Enlace de la cartelera pública">
+            <div class="public-link-actions">
+              <button id="copyPublicButton" class="button-secondary" type="button">COPIAR ENLACE</button>
+              <a id="openPublic" class="button button-secondary" href="cartelera.html" target="_blank" rel="noopener">ABRIR CARTELERA</a>
+            </div>
+            <p id="publicLinkStatus" class="public-link-status" role="status" aria-live="polite"></p>
           </div>
           <div class="danger-zone">
             <div>
@@ -127,6 +135,9 @@
       const deletePublicButton = document.getElementById("deletePublicButton");
       const globalStatus = document.getElementById("globalStatus");
       const openPublic = document.getElementById("openPublic");
+      const publicUrlField = document.getElementById("publicUrlField");
+      const copyPublicButton = document.getElementById("copyPublicButton");
+      const publicLinkStatus = document.getElementById("publicLinkStatus");
       let db = null;
       let tomorrowText = "";
 
@@ -135,7 +146,9 @@
       previewDate.textContent = window.SpinningTV.formatAgendaDate(new Date());
       window.SpinningTV.renderAgenda(agendaText.value, agendaPreview);
 
-      if (config.publicPageUrl) openPublic.href = config.publicPageUrl;
+      const publicPageUrl = String(config.publicPageUrl || "").trim() || new URL("cartelera.html", window.location.href).href;
+      openPublic.href = publicPageUrl;
+      publicUrlField.value = publicPageUrl;
 
       function isConfigured() {
         return /^https:\/\/.+\.supabase\.co$/i.test(String(config.supabaseUrl || "").replace(/\/$/, "")) &&
@@ -177,6 +190,24 @@
         localStorage.setItem("spinningtv-cartelera-draft", value);
         window.SpinningTV.renderAgenda(value, agendaPreview);
       }
+
+      copyPublicButton.addEventListener("click", async function () {
+        try {
+          await navigator.clipboard.writeText(publicPageUrl);
+        } catch (_) {
+          publicUrlField.focus();
+          publicUrlField.select();
+          document.execCommand("copy");
+          publicUrlField.setSelectionRange(0, 0);
+          publicUrlField.blur();
+        }
+        copyPublicButton.textContent = "ENLACE COPIADO";
+        publicLinkStatus.textContent = "La dirección está lista para pegar.";
+        setTimeout(function () {
+          copyPublicButton.textContent = "COPIAR ENLACE";
+          publicLinkStatus.textContent = "";
+        }, 1800);
+      });
 
       importMarcaButton.addEventListener("click", async function () {
         if (!db) {

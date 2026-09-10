@@ -475,6 +475,35 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 
 .actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1rem; }
 .actions > * { flex: 1 1 170px; }
+.publish-actions .button-publish { width: 100%; }
+.public-link-box {
+  display: grid;
+  gap: .7rem;
+  margin-top: 1rem;
+  border: 1px solid rgba(40, 213, 223, .32);
+  border-radius: 14px;
+  padding: .9rem;
+  background: linear-gradient(145deg, rgba(40, 213, 223, .07), rgba(9, 19, 33, .58));
+}
+.public-link-label { color: var(--text); font-size: .9rem; font-weight: 800; }
+.public-link-box input {
+  overflow: hidden;
+  color: #bffaff;
+  background: rgba(5, 14, 26, .8);
+  font-size: .88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.public-link-actions { display: flex; flex-wrap: wrap; gap: .7rem; }
+.public-link-actions > * {
+  display: inline-flex;
+  flex: 1 1 170px;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+}
+.public-link-status { min-height: 1.25rem; margin: -.15rem 0 0; color: var(--success); font-size: .82rem; }
 .danger-zone {
   display: grid;
   gap: .8rem;
