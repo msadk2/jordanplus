@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Panel de cartelera · SpinningTV</title>
   <meta name="description" content="Panel para importar y publicar la cartelera de SpinningTV.">
-  <link rel="stylesheet" href="cartelera.css?v=20260910-tomorrow1">
+  <link rel="stylesheet" href="cartelera.css?v=20260910-channels1">
 </head>
 <body>
   <header class="site-shell site-header">
@@ -34,23 +34,6 @@
             <button id="importMarcaButton" class="import-button" type="button">IMPORTAR EVENTOS DE HOY</button>
           </div>
 
-          <div class="tomorrow-box">
-            <div class="tomorrow-box-copy">
-              <strong>Consulta de mañana</strong>
-              <span>Solo permite ver y copiar los eventos. No modifica la cartelera pública.</span>
-            </div>
-            <div class="tomorrow-actions">
-              <button id="tomorrowButton" class="button-secondary" type="button">VER EVENTOS DE MAÑANA</button>
-              <button id="copyTomorrowButton" type="button" hidden>COPIAR TEXTO</button>
-            </div>
-            <div id="tomorrowResult" class="tomorrow-result" hidden>
-              <div class="tomorrow-result-heading">
-                <strong id="tomorrowDate"></strong>
-                <span id="tomorrowCount"></span>
-              </div>
-              <div id="tomorrowAgenda"></div>
-            </div>
-          </div>
         </section>
 
         <section class="panel">
@@ -94,12 +77,34 @@
           </div>
         </section>
 
+        <section class="panel tomorrow-panel">
+          <h2><span class="step-number">5.</span>Consulta de mañana</h2>
+          <p class="panel-help">Consulta y copia la programación de mañana sin modificar el borrador ni la cartelera pública.</p>
+          <div class="tomorrow-box">
+            <div class="tomorrow-box-copy">
+              <strong>Programación deportiva de mañana</strong>
+              <span>Esta consulta es independiente de los eventos que publiques hoy.</span>
+            </div>
+            <div class="tomorrow-actions">
+              <button id="tomorrowButton" class="button-secondary" type="button">VER EVENTOS DE MAÑANA</button>
+              <button id="copyTomorrowButton" type="button" hidden>COPIAR TEXTO</button>
+            </div>
+            <div id="tomorrowResult" class="tomorrow-result" hidden>
+              <div class="tomorrow-result-heading">
+                <strong id="tomorrowDate"></strong>
+                <span id="tomorrowCount"></span>
+              </div>
+              <div id="tomorrowAgenda"></div>
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   </main>
 
   <script src="config-cartelera.js?v=20260910"></script>
-  <script src="cartelera-common.js?v=20260910-groups1"></script>
+  <script src="cartelera-common.js?v=20260910-channels1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     (function () {

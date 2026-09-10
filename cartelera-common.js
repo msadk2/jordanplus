@@ -78,11 +78,65 @@
     }).join(" · ");
   }
 
-  function highlightTimes(line) {
-    const safe = escapeHtml(line);
-    return safe.replace(/\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/g, function (_, hour, minute) {
-      return '<time>' + hour.padStart(2, "0") + ":" + minute + "</time>";
-    });
+  function looksLikeChannel(value) {
+    const normalized = normalizeForMatch(value);
+    return /^(m\+|movistar|dazn|teledeporte|la 1|la 2|rtve|eurosport|gol(?: play)?|max|amazon|prime video|disney\+?|youtube|laliga tv|real madrid tv|barca tv|esport 3|tnt|vamos)\b/.test(normalized);
+  }
+
+  function splitEventDetails(line) {
+    const parts = line.split(/\s*·\s*/).map(cleanLine).filter(Boolean);
+    let channel = "";
+
+    if (parts.length >= 4 || (parts.length >= 3 && looksLikeChannel(parts[parts.length - 1]))) {
+      channel = parts.pop();
+    }
+
+    let time = "";
+    const timeMatch = (parts[0] || "").match(/^([01]?\d|2[0-3])[:.]([0-5]\d)$/);
+    if (timeMatch) {
+      time = timeMatch[1].padStart(2, "0") + ":" + timeMatch[2];
+      parts.shift();
+    }
+
+    return {
+      time: time,
+      description: parts.join(" · ") || line,
+      channel: channel
+    };
+  }
+
+  function createEventLayout(line) {
+    const details = splitEventDetails(line);
+    const layout = document.createElement("div");
+    layout.className = "agenda-event-layout";
+
+    const info = document.createElement("div");
+    info.className = "agenda-event-info";
+
+    if (details.time) {
+      const time = document.createElement("time");
+      time.textContent = details.time;
+      info.appendChild(time);
+    }
+
+    const description = document.createElement("span");
+    description.className = "agenda-event-description";
+    description.textContent = details.description;
+    info.appendChild(description);
+    layout.appendChild(info);
+
+    if (details.channel) {
+      const channel = document.createElement("span");
+      channel.className = "agenda-channel-badge";
+      const label = document.createElement("span");
+      label.textContent = "VER EN";
+      const name = document.createElement("strong");
+      name.textContent = details.channel;
+      channel.append(label, name);
+      layout.appendChild(channel);
+    }
+
+    return layout;
   }
 
   function classify(line) {
@@ -176,7 +230,7 @@
         const row = document.createElement("tr");
         row.className = "agenda-event";
         const cell = document.createElement("td");
-        cell.innerHTML = highlightTimes(line);
+        cell.appendChild(createEventLayout(line));
         row.appendChild(cell);
         tbody.appendChild(row);
       });
