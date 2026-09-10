@@ -100,7 +100,8 @@
 
     return {
       time: time,
-      description: parts.join(" · ") || line,
+      title: parts.shift() || line,
+      competition: parts.join(" · "),
       channel: channel
     };
   }
@@ -117,11 +118,24 @@
       const time = document.createElement("time");
       time.textContent = details.time;
       info.appendChild(time);
+    } else {
+      info.className += " no-time";
     }
 
     const description = document.createElement("span");
     description.className = "agenda-event-description";
-    description.textContent = details.description;
+    const title = document.createElement("strong");
+    title.className = "agenda-event-title";
+    title.textContent = details.title;
+    description.appendChild(title);
+
+    if (details.competition) {
+      const competition = document.createElement("span");
+      competition.className = "agenda-event-competition";
+      competition.textContent = details.competition;
+      description.appendChild(competition);
+    }
+
     info.appendChild(description);
     layout.appendChild(info);
 
