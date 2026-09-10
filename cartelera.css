@@ -82,9 +82,19 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 }
 
 .public-logo-header {
-  min-height: 150px;
-  padding-top: .35rem;
-  padding-bottom: .35rem;
+  position: relative;
+  min-height: 118px;
+  padding-top: .45rem;
+  padding-bottom: .6rem;
+}
+.public-logo-header::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(214, 43, 255, .42), rgba(40, 213, 223, .34), transparent);
+  content: "";
 }
 .public-logo {
   display: flex;
@@ -93,22 +103,23 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 }
 .public-brand-logo {
   display: block;
-  width: clamp(280px, 34vw, 430px);
+  width: clamp(235px, 27vw, 340px);
   max-width: 100%;
   height: auto;
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 12px 25px rgba(203, 31, 255, .2));
+  filter: drop-shadow(0 9px 20px rgba(211, 42, 255, .18));
   pointer-events: none;
   -webkit-user-drag: none;
 }
 .public-logo-header .updated {
   flex: 0 0 auto;
-  border: 1px solid rgba(40, 213, 223, .2);
+  border: 1px solid rgba(40, 213, 223, .18);
   border-radius: 999px;
-  padding: .48rem .78rem;
-  background: rgba(16, 27, 44, .72);
+  padding: .42rem .72rem;
+  background: rgba(16, 27, 44, .58);
+  backdrop-filter: blur(8px);
 }
 .no-copy, .no-copy * {
+  -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
 }
@@ -368,15 +379,16 @@ input[type="password"], input[type="text"], input[type="email"] { min-height: 48
   .public-logo-header {
     flex-direction: column;
     align-items: center;
-    gap: .15rem;
+    gap: .35rem;
     min-height: auto;
-    padding-top: .25rem;
+    padding-top: .4rem;
+    padding-bottom: .75rem;
     text-align: center;
   }
-  .public-brand-logo { width: min(88vw, 350px); }
+  .public-brand-logo { width: min(76vw, 300px); }
   .public-logo-header .updated {
     max-width: none;
-    margin-top: -.35rem;
+    margin-top: -.15rem;
     text-align: center;
   }
 }
