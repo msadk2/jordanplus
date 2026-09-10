@@ -26,10 +26,35 @@
 
   function classify(line) {
     if (/^[-_=]{4,}$/.test(line)) return "divider";
-    if (/^\(?\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\)?(?:\s+|$)/.test(line)) return "date";
+    if (/^\(?\s*\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\s*\)?(?:\s+|$)/.test(line)) return "date";
     if (/^(f[uú]tbol|tenis|ciclismo|baloncesto|motor|f[oó]rmula|motogp|golf|boxeo|mma|otros)\s*:/i.test(line)) return "section";
     if (!/\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/.test(line) && /:$/.test(line)) return "section";
     return "event";
+  }
+
+  function removeLeadingDate(line) {
+    return line
+      .replace(/^\(?\s*\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}\s*\)?\s*(?:[-–—|:]\s*)?/, "")
+      .trim();
+  }
+
+  function formatAgendaDate(value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const parts = new Intl.DateTimeFormat("es-ES", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    }).formatToParts(date);
+    const part = function (type) {
+      const match = parts.find(function (item) { return item.type === type; });
+      return match ? match.value : "";
+    };
+
+    const label = part("weekday") + " · " + part("day") + " de " + part("month") + " de " + part("year");
+    return label.charAt(0).toLocaleUpperCase("es-ES") + label.slice(1);
   }
 
   function renderAgenda(text, target) {
@@ -51,7 +76,12 @@
     const tbody = document.createElement("tbody");
 
     lines.forEach(function (line) {
-      const type = classify(line);
+      let type = classify(line);
+      if (type === "date") {
+        line = removeLeadingDate(line);
+        if (!line) return;
+        type = "section";
+      }
       if (type === "divider") {
         const divider = document.createElement("tr");
         divider.className = "agenda-divider";
@@ -82,5 +112,9 @@
     return "este navegador";
   }
 
-  window.SpinningTV = { renderAgenda: renderAgenda, browserName: browserName };
+  window.SpinningTV = {
+    renderAgenda: renderAgenda,
+    browserName: browserName,
+    formatAgendaDate: formatAgendaDate
+  };
 })();
