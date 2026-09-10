@@ -1,0 +1,21 @@
+{
+  "id": "./panel-cartelera.html",
+  "name": "Panel SpinningTV",
+  "short_name": "Panel SpinningTV",
+  "description": "Panel para importar, revisar y publicar la cartelera de SpinningTV.",
+  "lang": "es",
+  "start_url": "./panel-cartelera.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07101d",
+  "theme_color": "#07101d",
+  "icons": [
+    {
+      "src": "./app-icon.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

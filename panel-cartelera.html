@@ -6,6 +6,13 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Panel de cartelera · SpinningTV</title>
   <meta name="description" content="Panel para importar y publicar la cartelera de SpinningTV.">
+  <meta name="theme-color" content="#07101d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Panel SpinningTV">
+  <link rel="manifest" href="manifest-panel.webmanifest?v=1">
+  <link rel="icon" href="app-icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="app-icon.png">
   <link rel="stylesheet" href="cartelera.css?v=20260910-publiclink1">
 </head>
 <body>
@@ -392,6 +399,14 @@
           publishButton.textContent = "PUBLICAR CARTELERA";
         }
       });
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("./service-worker.js").catch(function (error) {
+            console.error("No se pudo activar el modo aplicación.", error);
+          });
+        });
+      }
 
       initializePanel();
     })();

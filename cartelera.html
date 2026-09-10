@@ -6,6 +6,13 @@
   <meta name="robots" content="index, follow">
   <title>Cartelera · SpinningTV</title>
   <meta name="description" content="Eventos deportivos disponibles en SpinningTV.">
+  <meta name="theme-color" content="#07101d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SpinningTV">
+  <link rel="manifest" href="manifest-cartelera.webmanifest?v=1">
+  <link rel="icon" href="app-icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="app-icon.png">
   <link rel="stylesheet" href="cartelera.css?v=20260910-channels1">
 </head>
 <body class="public-page no-copy">
@@ -105,6 +112,14 @@
           event.preventDefault();
         });
       });
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("./service-worker.js").catch(function (error) {
+            console.error("No se pudo activar el modo aplicación.", error);
+          });
+        });
+      }
     })();
   </script>
 </body>
