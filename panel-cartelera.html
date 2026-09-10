@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest-panel.webmanifest?v=1">
   <link rel="icon" href="app-icon.png" type="image/png">
   <link rel="apple-touch-icon" href="app-icon.png">
-  <link rel="stylesheet" href="cartelera.css?v=20260910-eventpremium1">
+  <link rel="stylesheet" href="cartelera.css?v=20260911-autoestado2">
 </head>
 <body>
   <header class="site-shell site-header">
@@ -28,6 +28,21 @@
 
   <main id="adminWorkspace" class="site-shell admin-main">
     <div id="globalStatus" class="status-banner" role="status" aria-live="polite"></div>
+
+    <section class="automation-status-card" aria-labelledby="automationStatusTitle">
+      <div class="automation-status-heading">
+        <div>
+          <p class="automation-kicker">Seguimiento automático</p>
+          <h2 id="automationStatusTitle">Estado de la automatización</h2>
+        </div>
+        <span id="automationBadge" class="automation-badge pending">Pendiente</span>
+      </div>
+      <div class="automation-status-body">
+        <strong id="automationHeadline">Esperando la próxima revisión</strong>
+        <p id="automationDetail">Aquí verás si las revisiones de las 10:00 y las 14:00 han añadido eventos nuevos.</p>
+        <span id="automationCheckedAt" class="automation-checked">Próximas revisiones: 10:00 y 14:00</span>
+      </div>
+    </section>
 
     <div class="admin-grid">
       <div class="admin-stack">
@@ -145,10 +160,15 @@
       const publicUrlField = document.getElementById("publicUrlField");
       const copyPublicButton = document.getElementById("copyPublicButton");
       const publicLinkStatus = document.getElementById("publicLinkStatus");
+      const automationBadge = document.getElementById("automationBadge");
+      const automationHeadline = document.getElementById("automationHeadline");
+      const automationDetail = document.getElementById("automationDetail");
+      const automationCheckedAt = document.getElementById("automationCheckedAt");
       let db = null;
       let tomorrowText = "";
 
       const draft = localStorage.getItem("spinningtv-cartelera-draft");
+      let publishedAgendaLoaded = Boolean(draft);
       if (draft) agendaText.value = draft;
       previewDate.textContent = window.SpinningTV.formatAgendaDate(new Date());
       window.SpinningTV.renderAgenda(agendaText.value, agendaPreview);
@@ -162,10 +182,89 @@
           String(config.supabaseKey || "").length > 20;
       }
 
+      function madridDateKey(value) {
+        const date = value instanceof Date ? value : new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        return new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Europe/Madrid",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }).format(date);
+      }
+
+      function formatCheckTime(value) {
+        if (!value) return "";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "";
+        return new Intl.DateTimeFormat("es-ES", {
+          timeZone: "Europe/Madrid",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        }).format(date);
+      }
+
+      function showAutomationStatus(data) {
+        const checkedAt = String(data.automation_checked_at || "");
+        const slot = String(data.automation_slot || "");
+        const statusValue = String(data.automation_status || "");
+        const added = Math.max(0, Number(data.automation_added_count) || 0);
+        const total = Math.max(0, Number(data.automation_total_count) || 0);
+        const checkedToday = checkedAt && madridDateKey(checkedAt) === madridDateKey(new Date());
+
+        automationBadge.className = "automation-badge pending";
+        automationBadge.textContent = "Pendiente";
+        automationHeadline.textContent = "Esperando la primera revisión de hoy";
+        automationDetail.textContent = "Aquí verás si las revisiones de las 10:00 y las 14:00 han añadido eventos nuevos.";
+        automationCheckedAt.textContent = "Próximas revisiones: 10:00 y 14:00";
+
+        if (!checkedToday || !slot || !statusValue) return;
+
+        automationCheckedAt.textContent = "Comprobado automáticamente a las " + formatCheckTime(checkedAt) + " (hora de Madrid)";
+
+        if (statusValue === "cleared") {
+          automationBadge.className = "automation-badge cleared";
+          automationBadge.textContent = "Borrada";
+          automationHeadline.textContent = "Cartelera vaciada a las " + slot;
+          automationDetail.textContent = "La primera versión del nuevo día se publicará automáticamente a las 00:05.";
+          return;
+        }
+
+        if (statusValue === "preserved") {
+          automationBadge.className = "automation-badge protected";
+          automationBadge.textContent = "Protegida";
+          automationHeadline.textContent = "Revisión de las " + slot + ": cartelera conservada";
+          automationDetail.textContent = "Marca devolvió menos eventos y se conservaron los " + total + " ya publicados para no perder información.";
+          return;
+        }
+
+        if (added > 0) {
+          automationBadge.className = "automation-badge news";
+          automationBadge.textContent = added + (added === 1 ? " nuevo" : " nuevos");
+          automationHeadline.textContent = "Actualización de las " + slot + " completada";
+          automationDetail.textContent = slot === "00:05"
+            ? "Se publicó la primera versión del día con " + total + (total === 1 ? " evento." : " eventos.")
+            : "Se añadieron " + added + (added === 1 ? " evento nuevo. " : " eventos nuevos. ") + "La cartelera tiene " + total + " en total.";
+          return;
+        }
+
+        automationBadge.className = "automation-badge unchanged";
+        automationBadge.textContent = "Sin cambios";
+        automationHeadline.textContent = "Revisión de las " + slot + " completada";
+        automationDetail.textContent = "No se encontraron eventos nuevos. Se mantienen " + total + (total === 1 ? " evento." : " eventos.");
+      }
+
       async function loadPublishedAgenda() {
-        if (draft) return;
-        const result = await db.from("cartelera").select("content").eq("id", 1).single();
-        if (!result.error && result.data && result.data.content) {
+        const result = await db
+          .from("cartelera")
+          .select("content, automation_checked_at, automation_slot, automation_added_count, automation_total_count, automation_status")
+          .eq("id", 1)
+          .single();
+        if (result.error || !result.data) return;
+        showAutomationStatus(result.data);
+        if (!publishedAgendaLoaded) {
+          publishedAgendaLoaded = true;
           agendaText.value = result.data.content;
           updatePreview();
         }
@@ -345,7 +444,10 @@
         try {
           const result = await db
             .from("cartelera")
-            .update({ content: "", updated_at: new Date().toISOString() })
+            .update({
+              content: "",
+              updated_at: new Date().toISOString()
+            })
             .eq("id", 1)
             .select("updated_at")
             .single();
@@ -385,7 +487,10 @@
         try {
           const result = await db
             .from("cartelera")
-            .update({ content: content, updated_at: new Date().toISOString() })
+            .update({
+              content: content,
+              updated_at: new Date().toISOString()
+            })
             .eq("id", 1)
             .select("updated_at")
             .single();
@@ -402,13 +507,21 @@
 
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register("./service-worker.js").catch(function (error) {
+          navigator.serviceWorker.register("./service-worker.js?v=6", { updateViaCache: "none" }).then(function (registration) {
+            return registration.update();
+          }).catch(function (error) {
             console.error("No se pudo activar el modo aplicación.", error);
           });
         });
       }
 
       initializePanel();
+      setInterval(function () {
+        if (db) loadPublishedAgenda();
+      }, 60000);
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden && db) loadPublishedAgenda();
+      });
     })();
   </script>
 </body>
