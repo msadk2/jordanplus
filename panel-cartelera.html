@@ -299,6 +299,10 @@
           showStatus("No hay eventos para publicar.", "error");
           return;
         }
+        if (content.includes("\uFFFD")) {
+          showStatus("Todavía hay caracteres � en el texto. Vuelve a importar los eventos antes de publicar.", "error");
+          return;
+        }
         if (!db) {
           showStatus("Falta conectar Supabase.", "error");
           return;

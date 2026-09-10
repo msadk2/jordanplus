@@ -6,21 +6,14 @@
   <meta name="robots" content="index, follow">
   <title>Cartelera · SpinningTV</title>
   <meta name="description" content="Eventos deportivos disponibles en SpinningTV.">
-  <link rel="stylesheet" href="cartelera.css?v=20260910-date1">
+  <link rel="stylesheet" href="cartelera.css?v=20260910-brand1">
 </head>
-<body>
-  <header class="site-shell site-header">
-    <div class="brand">
-      <img src="logo.png" alt="" onerror="this.remove()">
-      <div class="brand-copy">
-        <p class="brand-kicker">Eventos deportivos</p>
-        <h1 class="brand-name">SpinningTV</h1>
-      </div>
+<body class="public-page no-copy">
+  <header class="site-shell site-header public-logo-header">
+    <div class="public-logo">
+      <img class="public-brand-logo" src="spinning-ibo-logo.png" alt="Spinning IBO" draggable="false">
     </div>
-
-    <div id="updated" class="updated">
-      Cargando cartelera…
-    </div>
+    <div id="updated" class="updated">Cargando cartelera…</div>
   </header>
 
   <main class="site-shell public-main">
@@ -28,69 +21,43 @@
       <p>Programación deportiva</p>
       <h2 class="public-title">Cartelera</h2>
     </div>
-
-    <div
-      id="status"
-      class="status-banner"
-      role="status"
-      aria-live="polite">
-    </div>
-
+    <div id="status" class="status-banner" role="status" aria-live="polite"></div>
     <section class="agenda-card">
       <div class="agenda-day">
         <span>Eventos del día</span>
         <strong id="agendaDate">Cargando fecha…</strong>
       </div>
-
-      <div id="agenda">
-        <div class="empty-agenda">
-          Cargando eventos…
-        </div>
-      </div>
+      <div id="agenda"><div class="empty-agenda">Cargando eventos…</div></div>
     </section>
   </main>
 
   <script src="config-cartelera.js?v=20260910"></script>
-  <script src="cartelera-common.js?v=20260910-date1"></script>
+  <script src="cartelera-common.js?v=20260910-brand1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
   <script>
     (function () {
       "use strict";
-
       const config = window.SPINNINGTV_CONFIG || {};
       const agenda = document.getElementById("agenda");
       const updated = document.getElementById("updated");
       const status = document.getElementById("status");
       const agendaDate = document.getElementById("agendaDate");
-
       let lastContent = null;
       let db = null;
 
       function formatDate(value) {
-        if (!value) {
-          return "Sin actualizaciones todavía";
-        }
-
-        return "Actualizada " +
-          new Intl.DateTimeFormat("es-ES", {
-            dateStyle: "short",
-            timeStyle: "short"
-          }).format(new Date(value));
+        if (!value) return "Sin actualizaciones todavía";
+        return "Actualizada " + new Intl.DateTimeFormat("es-ES", {
+          dateStyle: "short",
+          timeStyle: "short"
+        }).format(new Date(value));
       }
 
       async function loadAgenda() {
         if (!db) {
           updated.textContent = "Pendiente de configuración";
-          agendaDate.textContent =
-            window.SpinningTV.formatAgendaDate(new Date());
-
-          status.textContent =
-            "La cartelera todavía no está conectada.";
-
-          status.className =
-            "status-banner visible error";
-
+          status.textContent = "La cartelera todavía no está conectada.";
+          status.className = "status-banner visible error";
           window.SpinningTV.renderAgenda("", agenda);
           return;
         }
@@ -101,89 +68,43 @@
             .select("content, updated_at")
             .eq("id", 1)
             .single();
-
-          if (result.error) {
-            throw result.error;
-          }
-
-          const content =
-            String(result.data.content || "");
-
+          if (result.error) throw result.error;
+          const content = String(result.data.content || "");
           if (content !== lastContent) {
-            window.SpinningTV.renderAgenda(
-              content,
-              agenda
-            );
-
+            window.SpinningTV.renderAgenda(content, agenda);
             lastContent = content;
           }
-
-          updated.textContent =
-            formatDate(result.data.updated_at);
-
-          agendaDate.textContent =
-            window.SpinningTV.formatAgendaDate(
-              result.data.updated_at || new Date()
-            );
-
+          updated.textContent = formatDate(result.data.updated_at);
+          agendaDate.textContent = window.SpinningTV.formatAgendaDate(result.data.updated_at);
           status.className = "status-banner";
         } catch (error) {
           console.error(error);
-
-          updated.textContent =
-            "No se pudo actualizar";
-
-          agendaDate.textContent =
-            window.SpinningTV.formatAgendaDate(new Date());
-
-          status.textContent =
-            "No ha sido posible cargar la cartelera. Se volverá a intentar automáticamente.";
-
-          status.className =
-            "status-banner visible error";
+          updated.textContent = "No se pudo actualizar";
+          status.textContent = "No ha sido posible cargar la cartelera. Se volverá a intentar automáticamente.";
+          status.className = "status-banner visible error";
         }
       }
 
-      const validConfiguration =
-        window.supabase &&
-        /^https:\/\/.+\.supabase\.co$/i.test(
-          String(config.supabaseUrl || "")
-        ) &&
-        String(config.supabaseKey || "").length > 20;
-
-      if (validConfiguration) {
+      if (window.supabase && /^https:\/\/.+\.supabase\.co$/i.test(String(config.supabaseUrl || "")) && String(config.supabaseKey || "").length > 20) {
         db = window.supabase.createClient(
-          String(config.supabaseUrl)
-            .replace(/\/$/, ""),
+          String(config.supabaseUrl).replace(/\/$/, ""),
           String(config.supabaseKey),
-          {
-            auth: {
-              persistSession: false,
-              autoRefreshToken: false,
-              detectSessionInUrl: false
-            }
-          }
+          { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
         );
       }
 
       loadAgenda();
-
-      const refreshMs =
-        Math.max(
-          15,
-          Number(config.refreshSeconds) || 60
-        ) * 1000;
-
+      const refreshMs = Math.max(15, Number(config.refreshSeconds) || 60) * 1000;
       setInterval(loadAgenda, refreshMs);
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) loadAgenda();
+      });
 
-      document.addEventListener(
-        "visibilitychange",
-        function () {
-          if (!document.hidden) {
-            loadAgenda();
-          }
-        }
-      );
+      ["copy", "cut", "contextmenu", "dragstart", "selectstart"].forEach(function (eventName) {
+        document.addEventListener(eventName, function (event) {
+          event.preventDefault();
+        });
+      });
     })();
   </script>
 </body>
