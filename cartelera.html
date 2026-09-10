@@ -4,32 +4,42 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="index, follow">
-  <title>Cartelera · SpinningTV</title>
+  <title>Programación deportiva · SpinningTV</title>
   <meta name="description" content="Eventos deportivos disponibles en SpinningTV.">
-  <link rel="stylesheet" href="cartelera.css">
+  <meta name="theme-color" content="#07101d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SpinningTV">
+  <link rel="manifest" href="manifest-cartelera.webmanifest?v=2">
+  <link rel="icon" href="app-icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="app-icon.png">
+  <link rel="stylesheet" href="cartelera.css?v=20260910-headerpremium3">
 </head>
-<body>
-  <header class="site-shell site-header">
-    <div class="brand">
-      <img src="logo.png" alt="" onerror="this.remove()">
-      <div class="brand-copy">
-        <p class="brand-kicker">Eventos deportivos</p>
-        <h1 class="brand-name">SpinningTV</h1>
-      </div>
+<body class="public-page no-copy">
+  <header class="site-shell public-hero">
+    <div class="public-brand-lockup">
+      <img class="public-brand-logo" src="spinning-ibo-logo-transparent.png" alt="Spinning IBO" draggable="false">
     </div>
-    <div id="updated" class="updated">Cargando cartelera…</div>
+    <h1 class="public-title">Programación <span>deportiva</span></h1>
+    <div class="public-update-pill">
+      <span class="public-update-dot" aria-hidden="true"></span>
+      <div id="updated" class="updated">Cargando programación…</div>
+    </div>
   </header>
 
   <main class="site-shell public-main">
-    <h2 class="public-title">Cartelera</h2>
     <div id="status" class="status-banner" role="status" aria-live="polite"></div>
     <section class="agenda-card">
+      <div class="agenda-day">
+        <span>Eventos del día</span>
+        <strong id="agendaDate">Cargando fecha…</strong>
+      </div>
       <div id="agenda"><div class="empty-agenda">Cargando eventos…</div></div>
     </section>
   </main>
 
   <script src="config-cartelera.js?v=20260910"></script>
-  <script src="cartelera-common.js"></script>
+  <script src="cartelera-common.js?v=20260910-eventpremium1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     (function () {
@@ -38,6 +48,7 @@
       const agenda = document.getElementById("agenda");
       const updated = document.getElementById("updated");
       const status = document.getElementById("status");
+      const agendaDate = document.getElementById("agendaDate");
       let lastContent = null;
       let db = null;
 
@@ -71,6 +82,7 @@
             lastContent = content;
           }
           updated.textContent = formatDate(result.data.updated_at);
+          agendaDate.textContent = window.SpinningTV.formatAgendaDate(result.data.updated_at);
           status.className = "status-banner";
         } catch (error) {
           console.error(error);
@@ -94,6 +106,22 @@
       document.addEventListener("visibilitychange", function () {
         if (!document.hidden) loadAgenda();
       });
+
+      ["copy", "cut", "contextmenu", "dragstart", "selectstart"].forEach(function (eventName) {
+        document.addEventListener(eventName, function (event) {
+          event.preventDefault();
+        });
+      });
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("./service-worker.js?v=4", { updateViaCache: "none" }).then(function (registration) {
+            return registration.update();
+          }).catch(function (error) {
+            console.error("No se pudo activar el modo aplicación.", error);
+          });
+        });
+      }
     })();
   </script>
 </body>

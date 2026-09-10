@@ -81,42 +81,91 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   text-align: right;
 }
 
-.public-logo-header {
+.public-hero {
   position: relative;
-  min-height: 118px;
-  padding-top: .45rem;
-  padding-bottom: .6rem;
+  display: grid;
+  justify-items: center;
+  gap: .35rem;
+  padding-top: 1.15rem;
+  padding-bottom: 1.35rem;
+  text-align: center;
 }
-.public-logo-header::after {
+.public-hero::before {
   position: absolute;
-  right: 0;
+  z-index: -1;
+  top: -8rem;
+  left: 50%;
+  width: min(52rem, 94vw);
+  height: 20rem;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(195, 42, 255, .16), rgba(40, 213, 223, .075) 38%, transparent 72%);
+  filter: blur(12px);
+  transform: translateX(-50%);
+  content: "";
+  pointer-events: none;
+}
+.public-hero::after {
+  position: absolute;
+  right: 12%;
   bottom: 0;
-  left: 0;
+  left: 12%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(214, 43, 255, .42), rgba(40, 213, 223, .34), transparent);
+  background: linear-gradient(90deg, transparent, rgba(214, 43, 255, .62), rgba(40, 213, 223, .72), rgba(255, 181, 71, .48), transparent);
   content: "";
 }
-.public-logo {
-  display: flex;
-  align-items: center;
-  min-width: 0;
+.public-brand-lockup {
+  position: relative;
+  display: grid;
+  place-items: center;
 }
 .public-brand-logo {
   display: block;
-  width: clamp(235px, 27vw, 340px);
+  width: clamp(240px, 29vw, 350px);
   max-width: 100%;
   height: auto;
-  filter: drop-shadow(0 9px 20px rgba(211, 42, 255, .18));
+  filter: drop-shadow(0 12px 30px rgba(211, 42, 255, .25));
   pointer-events: none;
   -webkit-user-drag: none;
 }
-.public-logo-header .updated {
-  flex: 0 0 auto;
+.public-title {
+  margin: -.15rem 0 0;
+  color: #fff;
+  font-size: clamp(2.35rem, 5.2vw, 4.35rem);
+  font-weight: 950;
+  letter-spacing: -.06em;
+  line-height: .98;
+  text-wrap: balance;
+  text-shadow: 0 8px 32px rgba(0, 0, 0, .36);
+}
+.public-title span {
+  color: transparent;
+  background: linear-gradient(100deg, #fff 5%, #75f0f4 45%, #e985ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.public-update-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .75rem;
   border: 1px solid rgba(40, 213, 223, .18);
   border-radius: 999px;
-  padding: .42rem .72rem;
-  background: rgba(16, 27, 44, .58);
-  backdrop-filter: blur(8px);
+  padding: .42rem .78rem;
+  background: rgba(16, 27, 44, .72);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .2), 0 0 18px rgba(40, 213, 223, .05) inset;
+  backdrop-filter: blur(12px);
+}
+.public-update-dot {
+  width: .45rem;
+  height: .45rem;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 4px rgba(78, 227, 154, .1), 0 0 12px rgba(78, 227, 154, .5);
+}
+.public-update-pill .updated {
+  color: #b8c7da;
+  font-size: .8rem;
+  text-align: center;
 }
 .no-copy, .no-copy * {
   -webkit-touch-callout: none;
@@ -124,17 +173,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   user-select: none;
 }
 
-.public-main { padding: 1.25rem 0 3.5rem; }
-.public-heading { margin: 0 auto 1.35rem; text-align: center; }
-.public-heading p {
-  margin: 0 0 .15rem;
-  color: var(--cyan);
-  font-size: .78rem;
-  font-weight: 850;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-}
-.public-title { margin: 0; font-size: clamp(2rem, 6vw, 3.2rem); letter-spacing: -.05em; }
+.public-main { padding: 1.15rem 0 3.5rem; }
 
 .agenda-card {
   position: relative;
@@ -618,22 +657,14 @@ input[type="password"], input[type="text"], input[type="email"] { min-height: 48
   .agenda-sport-heading { padding: .7rem .78rem; }
   .agenda-sport-heading span { font-size: .72rem; }
   .preview-frame { max-height: 380px; }
-  .public-main { padding-top: .25rem; }
-  .public-logo-header {
-    flex-direction: column;
-    align-items: center;
-    gap: .35rem;
-    min-height: auto;
-    padding-top: .4rem;
-    padding-bottom: .75rem;
-    text-align: center;
-  }
-  .public-brand-logo { width: min(76vw, 300px); }
-  .public-logo-header .updated {
-    max-width: none;
-    margin-top: -.15rem;
-    text-align: center;
-  }
+  .public-main { padding-top: .8rem; }
+  .public-hero { gap: .25rem; padding-top: .75rem; padding-bottom: 1rem; }
+  .public-hero::after { right: 3%; left: 3%; }
+  .public-brand-logo { width: min(72vw, 275px); }
+  .public-title { margin-top: -.05rem; font-size: clamp(2.15rem, 11vw, 3rem); }
+  .public-title span { display: block; }
+  .public-update-pill { margin-top: .65rem; }
+  .public-update-pill .updated { max-width: none; font-size: .76rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
