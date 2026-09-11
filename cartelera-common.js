@@ -106,7 +106,11 @@
     };
   }
 
-  function createEventLayout(line) {
+  function eventKey(time, title) {
+    return cleanLine(String(time || "") + "|" + String(title || "")).toLocaleLowerCase("es-ES");
+  }
+
+  function createEventLayout(line, eventUpdates) {
     const details = splitEventDetails(line);
     const layout = document.createElement("div");
     layout.className = "agenda-event-layout";
@@ -134,6 +138,19 @@
       competition.className = "agenda-event-competition";
       competition.textContent = details.competition;
       description.appendChild(competition);
+    }
+
+    const update = eventUpdates[eventKey(details.time, details.title)];
+    if (update && update.slot && update.slot !== "00:05") {
+      const newBadge = document.createElement("span");
+      newBadge.className = "agenda-new-badge";
+      const newDot = document.createElement("span");
+      newDot.className = "agenda-new-dot";
+      newDot.setAttribute("aria-hidden", "true");
+      const newText = document.createElement("span");
+      newText.textContent = "NUEVO · añadido " + update.slot;
+      newBadge.append(newDot, newText);
+      description.appendChild(newBadge);
     }
 
     info.appendChild(description);
@@ -186,7 +203,10 @@
     return label.charAt(0).toLocaleUpperCase("es-ES") + label.slice(1);
   }
 
-  function renderAgenda(text, target) {
+  function renderAgenda(text, target, options) {
+    const eventUpdates = options && options.eventUpdates && typeof options.eventUpdates === "object"
+      ? options.eventUpdates
+      : {};
     const lines = String(text || "")
       .split(/\r?\n/)
       .map(cleanLine)
@@ -244,7 +264,7 @@
         const row = document.createElement("tr");
         row.className = "agenda-event";
         const cell = document.createElement("td");
-        cell.appendChild(createEventLayout(line));
+        cell.appendChild(createEventLayout(line, eventUpdates));
         row.appendChild(cell);
         tbody.appendChild(row);
       });

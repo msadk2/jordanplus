@@ -13,7 +13,7 @@
   <link rel="manifest" href="manifest-panel.webmanifest?v=1">
   <link rel="icon" href="app-icon.png" type="image/png">
   <link rel="apple-touch-icon" href="app-icon.png">
-  <link rel="stylesheet" href="cartelera.css?v=20260911-autoestado2">
+  <link rel="stylesheet" href="cartelera.css?v=20260911-hourly1">
 </head>
 <body>
   <header class="site-shell site-header">
@@ -39,8 +39,8 @@
       </div>
       <div class="automation-status-body">
         <strong id="automationHeadline">Esperando la próxima revisión</strong>
-        <p id="automationDetail">Aquí verás si las revisiones de las 10:00 y las 14:00 han añadido eventos nuevos.</p>
-        <span id="automationCheckedAt" class="automation-checked">Próximas revisiones: 10:00 y 14:00</span>
+        <p id="automationDetail">Aquí verás si las revisiones de cada hora han añadido eventos nuevos.</p>
+        <span id="automationCheckedAt" class="automation-checked">Revisiones cada hora · 08:00–23:00</span>
       </div>
     </section>
 
@@ -134,7 +134,7 @@
   </main>
 
   <script src="config-cartelera.js?v=20260910"></script>
-  <script src="cartelera-common.js?v=20260910-eventpremium1"></script>
+  <script src="cartelera-common.js?v=20260911-hourly1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script>
     (function () {
@@ -216,8 +216,8 @@
         automationBadge.className = "automation-badge pending";
         automationBadge.textContent = "Pendiente";
         automationHeadline.textContent = "Esperando la primera revisión de hoy";
-        automationDetail.textContent = "Aquí verás si las revisiones de las 10:00 y las 14:00 han añadido eventos nuevos.";
-        automationCheckedAt.textContent = "Próximas revisiones: 10:00 y 14:00";
+        automationDetail.textContent = "Aquí verás si las revisiones de cada hora han añadido eventos nuevos.";
+        automationCheckedAt.textContent = "Revisiones cada hora · 08:00–23:00";
 
         if (!checkedToday || !slot || !statusValue) return;
 
@@ -507,7 +507,7 @@
 
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
-          navigator.serviceWorker.register("./service-worker.js?v=6", { updateViaCache: "none" }).then(function (registration) {
+          navigator.serviceWorker.register("./service-worker.js?v=7", { updateViaCache: "none" }).then(function (registration) {
             return registration.update();
           }).catch(function (error) {
             console.error("No se pudo activar el modo aplicación.", error);
