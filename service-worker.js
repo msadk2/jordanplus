@@ -1,13 +1,11 @@
-const CACHE_NAME = "spinningtv-pwa-v7";
+const CACHE_NAME = "spinningtv-pwa-v8";
 const APP_SHELL = [
   "./cartelera.html",
-  "./panel-cartelera.html",
   "./cartelera.css?v=20260911-hourly1",
   "./cartelera-common.js?v=20260911-hourly1",
   "./spinning-ibo-logo-transparent.png",
   "./app-icon.png",
-  "./manifest-cartelera.webmanifest",
-  "./manifest-panel.webmanifest"
+  "./manifest-cartelera.webmanifest"
 ];
 
 self.addEventListener("install", function (event) {
