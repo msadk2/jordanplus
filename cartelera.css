@@ -86,8 +86,8 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   display: grid;
   justify-items: center;
   gap: .35rem;
-  padding-top: 1.15rem;
-  padding-bottom: 1.35rem;
+  padding-top: .65rem;
+  padding-bottom: 1rem;
   text-align: center;
 }
 .public-hero::before {
@@ -120,7 +120,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 }
 .public-brand-logo {
   display: block;
-  width: clamp(240px, 29vw, 350px);
+  width: clamp(210px, 25vw, 305px);
   max-width: 100%;
   height: auto;
   filter: drop-shadow(0 12px 30px rgba(211, 42, 255, .25));
@@ -128,9 +128,9 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   -webkit-user-drag: none;
 }
 .public-title {
-  margin: -.15rem 0 0;
+  margin: -.3rem 0 0;
   color: #fff;
-  font-size: clamp(2.35rem, 5.2vw, 4.35rem);
+  font-size: clamp(2.2rem, 4.7vw, 3.9rem);
   font-weight: 950;
   letter-spacing: -.06em;
   line-height: .98;
@@ -147,7 +147,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   display: inline-flex;
   align-items: center;
   gap: .5rem;
-  margin-top: .75rem;
+  margin-top: .55rem;
   border: 1px solid rgba(40, 213, 223, .18);
   border-radius: 999px;
   padding: .42rem .78rem;
@@ -172,8 +172,8 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  width: min(100%, 760px);
-  margin-top: .55rem;
+  width: min(100%, 820px);
+  margin-top: .45rem;
   border: 1px solid rgba(40, 213, 223, .25);
   border-radius: 16px;
   padding: .72rem .85rem;
@@ -229,7 +229,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   user-select: none;
 }
 
-.public-main { padding: 1.15rem 0 3.5rem; }
+.public-main { padding: .8rem 0 3.5rem; }
 
 .agenda-card {
   position: relative;
@@ -281,6 +281,29 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   font-weight: 900;
   letter-spacing: -.015em;
 }
+.agenda-overview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  margin-top: .55rem;
+}
+.agenda-overview span {
+  border: 1px solid rgba(121, 151, 187, .26);
+  border-radius: 999px;
+  padding: .25rem .56rem;
+  color: #bfd0e4;
+  background: rgba(16, 31, 50, .66);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .01em;
+  text-transform: none;
+}
+.agenda-overview span:last-child {
+  border-color: rgba(40, 213, 223, .28);
+  color: #bffaff;
+}
 
 .agenda-table { width: 100%; border-collapse: collapse; }
 .agenda-table td {
@@ -293,6 +316,17 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .agenda-event { transition: background-color .16s ease; }
 .agenda-event:nth-child(even) { background: rgba(255, 255, 255, .022); }
 .agenda-event:hover { background: rgba(40, 213, 223, .065); }
+.agenda-event.is-next td {
+  background:
+    radial-gradient(circle at 0 50%, rgba(255, 181, 71, .12), transparent 34%),
+    linear-gradient(90deg, rgba(40, 213, 223, .075), rgba(213, 51, 255, .045));
+  box-shadow: inset 3px 0 var(--gold), inset 0 1px rgba(255, 181, 71, .12), inset 0 -1px rgba(40, 213, 223, .09);
+}
+.agenda-event.has-new-update { animation: new-event-reveal .55s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes new-event-reveal {
+  from { opacity: .15; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 .agenda-event time {
   display: inline-block;
   min-width: 3.65rem;
@@ -356,12 +390,39 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   letter-spacing: .018em;
   line-height: 1.35;
 }
+.agenda-event-flags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .38rem;
+  margin-top: .28rem;
+}
+.agenda-next-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .38rem;
+  border: 1px solid rgba(40, 213, 223, .5);
+  border-radius: 999px;
+  padding: .2rem .48rem;
+  color: #c5fbff;
+  background: linear-gradient(135deg, rgba(40, 213, 223, .17), rgba(40, 213, 223, .06));
+  box-shadow: 0 5px 16px rgba(40, 213, 223, .08);
+  font-size: .62rem;
+  line-height: 1.2;
+}
+.agenda-next-badge strong {
+  color: #fff;
+  font-size: inherit;
+  font-weight: 950;
+  letter-spacing: .075em;
+}
+.agenda-next-badge span { font-weight: 800; }
 .agenda-new-badge {
   display: inline-flex;
   align-items: center;
   justify-self: start;
   gap: .35rem;
-  margin-top: .28rem;
+  margin-top: 0;
   border: 1px solid rgba(255, 181, 71, .46);
   border-radius: 999px;
   padding: .2rem .48rem;
@@ -437,6 +498,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   box-shadow: 0 12px 32px rgba(0, 0, 0, .18);
 }
 .agenda-sport-heading {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -447,7 +509,16 @@ button:disabled { cursor: not-allowed; opacity: .48; }
     linear-gradient(90deg, rgba(40, 213, 223, .14), rgba(255, 181, 71, .07)),
     rgba(5, 14, 26, .78);
 }
+.agenda-sport-heading::before {
+  width: .42rem;
+  height: .42rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cyan), #d933ff);
+  box-shadow: 0 0 12px rgba(40, 213, 223, .4);
+  content: "";
+}
 .agenda-sport-heading h3 {
+  flex: 1;
   margin: 0;
   color: var(--text);
   font-size: 1.02rem;
@@ -812,15 +883,17 @@ input[type="password"], input[type="text"], input[type="email"] { min-height: 48
   .agenda-sport-heading span { font-size: .72rem; }
   .preview-frame { max-height: 380px; }
   .public-main { padding-top: .8rem; }
-  .public-hero { gap: .25rem; padding-top: .75rem; padding-bottom: 1rem; }
+  .public-hero { gap: .22rem; padding-top: .45rem; padding-bottom: .8rem; }
   .public-hero::after { right: 3%; left: 3%; }
-  .public-brand-logo { width: min(72vw, 275px); }
-  .public-title { margin-top: -.05rem; font-size: clamp(2.15rem, 11vw, 3rem); }
+  .public-brand-logo { width: min(68vw, 250px); }
+  .public-title { margin-top: -.12rem; font-size: clamp(2rem, 10.5vw, 2.8rem); }
   .public-title span { display: block; }
   .public-update-pill { margin-top: .65rem; }
   .public-update-pill .updated { max-width: none; font-size: .76rem; }
   .public-auto-strip { align-items: stretch; flex-direction: column; gap: .65rem; padding: .72rem; }
   .public-auto-result { align-self: stretch; }
+  .agenda-overview { gap: .35rem; margin-top: .48rem; }
+  .agenda-overview span { font-size: .68rem; }
   .automation-status-card { padding: 1rem; }
   .automation-status-heading { align-items: flex-start; }
   .automation-badge { max-width: 42%; text-align: center; }

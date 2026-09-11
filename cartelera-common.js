@@ -110,6 +110,31 @@
     return cleanLine(String(time || "") + "|" + String(title || "")).toLocaleLowerCase("es-ES");
   }
 
+  function timeToMinutes(value) {
+    const match = String(value || "").match(/^([01]?\d|2[0-3]):([0-5]\d)$/);
+    return match ? Number(match[1]) * 60 + Number(match[2]) : -1;
+  }
+
+  function madridMinutes() {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Europe/Madrid",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23"
+    }).formatToParts(new Date());
+    const hour = Number((parts.find(function (part) { return part.type === "hour"; }) || {}).value || 0);
+    const minute = Number((parts.find(function (part) { return part.type === "minute"; }) || {}).value || 0);
+    return hour * 60 + minute;
+  }
+
+  function countdownLabel(minutes) {
+    if (minutes <= 0) return "Empieza ahora";
+    if (minutes < 60) return "Empieza en " + minutes + " min";
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    return "Empieza en " + hours + " h" + (rest ? " " + rest + " min" : "");
+  }
+
   function createEventLayout(line, eventUpdates) {
     const details = splitEventDetails(line);
     const layout = document.createElement("div");
@@ -140,6 +165,8 @@
       description.appendChild(competition);
     }
 
+    const flags = document.createElement("span");
+    flags.className = "agenda-event-flags";
     const update = eventUpdates[eventKey(details.time, details.title)];
     if (update && update.slot && update.slot !== "00:05") {
       const newBadge = document.createElement("span");
@@ -150,8 +177,9 @@
       const newText = document.createElement("span");
       newText.textContent = "NUEVO · añadido " + update.slot;
       newBadge.append(newDot, newText);
-      description.appendChild(newBadge);
+      flags.appendChild(newBadge);
     }
+    if (flags.childElementCount) description.appendChild(flags);
 
     info.appendChild(description);
     layout.appendChild(info);
@@ -168,6 +196,45 @@
     }
 
     return layout;
+  }
+
+  function updateNextEvent(target) {
+    const rows = Array.from(target.querySelectorAll(".agenda-event[data-event-minutes]"));
+    rows.forEach(function (row) {
+      row.classList.remove("is-next");
+      const oldBadge = row.querySelector(".agenda-next-badge");
+      if (oldBadge) oldBadge.remove();
+      const flags = row.querySelector(".agenda-event-flags");
+      if (flags && !flags.childElementCount) flags.remove();
+    });
+
+    const now = madridMinutes();
+    const futureMinutes = rows
+      .map(function (row) { return Number(row.dataset.eventMinutes); })
+      .filter(function (minutes) { return Number.isFinite(minutes) && minutes >= now; });
+    if (!futureMinutes.length) return;
+
+    const nextMinutes = Math.min.apply(Math, futureMinutes);
+    rows.forEach(function (row) {
+      if (Number(row.dataset.eventMinutes) !== nextMinutes) return;
+      row.classList.add("is-next");
+      const description = row.querySelector(".agenda-event-description");
+      if (!description) return;
+      let flags = description.querySelector(".agenda-event-flags");
+      if (!flags) {
+        flags = document.createElement("span");
+        flags.className = "agenda-event-flags";
+        description.appendChild(flags);
+      }
+      const badge = document.createElement("span");
+      badge.className = "agenda-next-badge";
+      const label = document.createElement("strong");
+      label.textContent = "PRÓXIMO";
+      const countdown = document.createElement("span");
+      countdown.textContent = countdownLabel(nextMinutes - now);
+      badge.append(label, countdown);
+      flags.prepend(badge);
+    });
   }
 
   function classify(line) {
@@ -263,8 +330,12 @@
       events.forEach(function (line) {
         const row = document.createElement("tr");
         row.className = "agenda-event";
+        const details = splitEventDetails(line);
+        const minutes = timeToMinutes(details.time);
+        if (minutes >= 0) row.dataset.eventMinutes = String(minutes);
         const cell = document.createElement("td");
         cell.appendChild(createEventLayout(line, eventUpdates));
+        if (cell.querySelector(".agenda-new-badge")) row.classList.add("has-new-update");
         row.appendChild(cell);
         tbody.appendChild(row);
       });
@@ -275,6 +346,7 @@
     });
 
     target.appendChild(groupsContainer);
+    if (options && options.highlightNext) updateNextEvent(target);
   }
 
   function browserName() {
@@ -289,6 +361,7 @@
 
   window.SpinningTV = {
     renderAgenda: renderAgenda,
+    updateNextEvent: updateNextEvent,
     browserName: browserName,
     formatAgendaDate: formatAgendaDate
   };
