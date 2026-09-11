@@ -135,6 +135,17 @@
     return "Empieza en " + hours + " h" + (rest ? " " + rest + " min" : "");
   }
 
+  function sportAccentClass(sport) {
+    const value = normalizeForMatch(sport);
+    if (/tenis|padel/.test(value)) return "sport-purple";
+    if (/golf/.test(value)) return "sport-gold";
+    if (/motor|formula|motogp/.test(value)) return "sport-orange";
+    if (/baloncesto/.test(value)) return "sport-red";
+    if (/ciclismo|atletismo/.test(value)) return "sport-green";
+    if (/futbol sala|balonmano/.test(value)) return "sport-blue";
+    return "sport-cyan";
+  }
+
   function createEventLayout(line, eventUpdates) {
     const details = splitEventDetails(line);
     const layout = document.createElement("div");
@@ -200,15 +211,17 @@
 
   function updateNextEvent(target) {
     const rows = Array.from(target.querySelectorAll(".agenda-event[data-event-minutes]"));
+    const now = madridMinutes();
     rows.forEach(function (row) {
       row.classList.remove("is-next");
+      const minutes = Number(row.dataset.eventMinutes);
+      row.classList.toggle("is-past", Number.isFinite(minutes) && minutes < now);
       const oldBadge = row.querySelector(".agenda-next-badge");
       if (oldBadge) oldBadge.remove();
       const flags = row.querySelector(".agenda-event-flags");
       if (flags && !flags.childElementCount) flags.remove();
     });
 
-    const now = madridMinutes();
     const futureMinutes = rows
       .map(function (row) { return Number(row.dataset.eventMinutes); })
       .filter(function (minutes) { return Number.isFinite(minutes) && minutes >= now; });
@@ -312,7 +325,7 @@
 
     groups.forEach(function (events, sport) {
       const section = document.createElement("section");
-      section.className = "agenda-sport-group";
+      section.className = "agenda-sport-group " + sportAccentClass(sport);
 
       const heading = document.createElement("div");
       heading.className = "agenda-sport-heading";
