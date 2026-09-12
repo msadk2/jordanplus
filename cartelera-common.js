@@ -155,7 +155,7 @@
     if (value.includes("tenis")) return 180;
     if (value.includes("padel")) return 150;
     if (value.includes("ciclismo")) return 300;
-    if (value.includes("golf")) return 360;
+    if (value.includes("golf")) return 240;
     if (value.includes("motor")) return 150;
     if (value.includes("balonmano")) return 110;
     if (value.includes("rugby") || value.includes("hockey")) return 120;
