@@ -1,8 +1,8 @@
-const CACHE_NAME = "spinningtv-pwa-v11";
+const CACHE_NAME = "spinningtv-pwa-v12";
 const APP_SHELL = [
   "./cartelera.html",
-  "./cartelera.css?v=20260912-tvplus2",
-  "./cartelera-common.js?v=20260912-tvplus2",
+  "./cartelera.css?v=20260912-tvplus3",
+  "./cartelera-common.js?v=20260912-tvplus3",
   "./spinning-ibo-logo-transparent.png",
   "./app-icon.png",
   "./manifest-cartelera.webmanifest"

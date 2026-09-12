@@ -320,7 +320,6 @@ button:disabled { cursor: not-allowed; opacity: .48; }
 .started-events-heading {
   display: flex;
   align-items: end;
-  justify-content: space-between;
   gap: 1rem;
   margin: 0 .1rem .72rem;
 }
@@ -329,11 +328,6 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   color: #fff;
   font-size: 1.15rem;
   letter-spacing: -.015em;
-}
-.started-events-heading > span {
-  color: #9fb3cc;
-  font-size: .7rem;
-  font-weight: 800;
 }
 .started-events-list {
   display: grid;
@@ -407,18 +401,6 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   background: var(--success);
   box-shadow: 0 0 10px rgba(78, 227, 154, .7);
   animation: status-pulse 2.2s ease-out infinite;
-}
-.started-event-estimate {
-  grid-column: 1 / -1;
-  justify-self: start;
-  border: 1px solid rgba(78, 227, 154, .28);
-  border-radius: 999px;
-  padding: .15rem .45rem;
-  color: #bdf8da;
-  background: rgba(78, 227, 154, .07);
-  font-size: .62rem;
-  font-weight: 900;
-  letter-spacing: .025em;
 }
 
 .agenda-table { width: 100%; border-collapse: collapse; }
@@ -1044,14 +1026,12 @@ input[type="password"], input[type="text"], input[type="email"] { min-height: 48
   .public-auto-result { align-self: stretch; }
   .started-events { padding: .85rem .7rem .95rem; }
   .started-events-heading { align-items: start; }
-  .started-events-heading > span { padding-top: .2rem; text-align: right; }
   .started-events-list { grid-template-columns: 1fr; gap: .5rem; }
   .started-event-item {
-    grid-template-columns: 3.9rem minmax(0, 1fr) auto;
+    grid-template-columns: 3.9rem minmax(0, 1fr);
     min-height: 66px;
     padding: .6rem .65rem;
   }
-  .started-event-estimate { grid-column: auto; justify-self: end; }
   .public-footer-status { margin-top: .9rem; padding-top: .9rem; }
   .agenda-overview { gap: .35rem; margin-top: .48rem; }
   .agenda-overview span { font-size: .68rem; }
