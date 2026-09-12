@@ -222,14 +222,10 @@
       if (flags && !flags.childElementCount) flags.remove();
     });
 
-    const futureMinutes = rows
-      .map(function (row) { return Number(row.dataset.eventMinutes); })
-      .filter(function (minutes) { return Number.isFinite(minutes) && minutes >= now; });
-    if (!futureMinutes.length) return;
-
-    const nextMinutes = Math.min.apply(Math, futureMinutes);
     rows.forEach(function (row) {
-      if (Number(row.dataset.eventMinutes) !== nextMinutes) return;
+      const eventMinutes = Number(row.dataset.eventMinutes);
+      const remainingMinutes = eventMinutes - now;
+      if (!Number.isFinite(eventMinutes) || remainingMinutes < 0 || remainingMinutes > 60) return;
       row.classList.add("is-next");
       const description = row.querySelector(".agenda-event-description");
       if (!description) return;
@@ -244,7 +240,7 @@
       const label = document.createElement("strong");
       label.textContent = "PRÓXIMO";
       const countdown = document.createElement("span");
-      countdown.textContent = countdownLabel(nextMinutes - now);
+      countdown.textContent = countdownLabel(remainingMinutes);
       badge.append(label, countdown);
       flags.prepend(badge);
     });
