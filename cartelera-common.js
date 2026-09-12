@@ -146,6 +146,31 @@
     return "sport-cyan";
   }
 
+  function estimatedDuration(sport) {
+    const value = normalizeForMatch(sport);
+    if (value.includes("futbol americano")) return 210;
+    if (value.includes("futbol sala")) return 110;
+    if (value.includes("futbol")) return 120;
+    if (value.includes("baloncesto")) return 135;
+    if (value.includes("tenis")) return 180;
+    if (value.includes("padel")) return 150;
+    if (value.includes("ciclismo")) return 300;
+    if (value.includes("golf")) return 360;
+    if (value.includes("motor")) return 150;
+    if (value.includes("balonmano")) return 110;
+    if (value.includes("rugby") || value.includes("hockey")) return 120;
+    if (value.includes("voleibol")) return 150;
+    if (value.includes("atletismo")) return 180;
+    if (value.includes("boxeo") || value.includes("mma")) return 240;
+    return 120;
+  }
+
+  function sportForRow(row) {
+    const group = row.closest(".agenda-sport-group");
+    const heading = group ? group.querySelector(".agenda-sport-heading h3") : null;
+    return heading ? heading.textContent.trim() : "Otros deportes";
+  }
+
   function createEventLayout(line, eventUpdates) {
     const details = splitEventDetails(line);
     const layout = document.createElement("div");
@@ -215,7 +240,9 @@
     rows.forEach(function (row) {
       row.classList.remove("is-next");
       const minutes = Number(row.dataset.eventMinutes);
-      row.classList.toggle("is-past", Number.isFinite(minutes) && minutes < now);
+      const finished = Number.isFinite(minutes) && now >= minutes + estimatedDuration(sportForRow(row));
+      row.hidden = finished;
+      row.classList.toggle("is-past", !finished && Number.isFinite(minutes) && minutes < now);
       const oldBadge = row.querySelector(".agenda-next-badge");
       if (oldBadge) oldBadge.remove();
       const flags = row.querySelector(".agenda-event-flags");
@@ -223,6 +250,7 @@
     });
 
     rows.forEach(function (row) {
+      if (row.hidden) return;
       const eventMinutes = Number(row.dataset.eventMinutes);
       const remainingMinutes = eventMinutes - now;
       if (!Number.isFinite(eventMinutes) || remainingMinutes < 0 || remainingMinutes > 60) return;
@@ -243,6 +271,17 @@
       countdown.textContent = countdownLabel(remainingMinutes);
       badge.append(label, countdown);
       flags.prepend(badge);
+    });
+
+    Array.from(target.querySelectorAll(".agenda-sport-group")).forEach(function (group) {
+      const visibleEvents = Array.from(group.querySelectorAll(".agenda-event")).filter(function (row) {
+        return !row.hidden;
+      });
+      group.hidden = !visibleEvents.length;
+      const count = group.querySelector(".agenda-sport-heading > span");
+      if (count) {
+        count.textContent = visibleEvents.length + (visibleEvents.length === 1 ? " evento" : " eventos");
+      }
     });
   }
 
@@ -371,6 +410,7 @@
   window.SpinningTV = {
     renderAgenda: renderAgenda,
     updateNextEvent: updateNextEvent,
+    estimatedDuration: estimatedDuration,
     browserName: browserName,
     formatAgendaDate: formatAgendaDate
   };
