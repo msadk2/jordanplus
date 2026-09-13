@@ -594,6 +594,53 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   letter-spacing: .1em;
 }
 .agenda-channel-badge strong { font-size: .82rem; }
+.agenda-channel-badge.channel-movistar {
+  border-color: rgba(77, 211, 255, .55);
+  background: linear-gradient(135deg, rgba(0, 150, 214, .34), rgba(16, 63, 115, .3));
+  box-shadow: 0 6px 18px rgba(0, 157, 220, .14);
+}
+.agenda-channel-badge.channel-movistar > span { color: #9ceaff; }
+.agenda-channel-badge.channel-dazn {
+  border-color: rgba(255, 255, 255, .48);
+  background: linear-gradient(135deg, rgba(255, 255, 255, .16), rgba(74, 87, 105, .22));
+  box-shadow: 0 6px 18px rgba(255, 255, 255, .07);
+}
+.agenda-channel-badge.channel-dazn > span { color: #fff; }
+.agenda-channel-badge.channel-eurosport {
+  border-color: rgba(255, 83, 103, .55);
+  background: linear-gradient(135deg, rgba(224, 32, 58, .3), rgba(75, 30, 70, .24));
+}
+.agenda-channel-badge.channel-eurosport > span { color: #ffbdc6; }
+.agenda-channel-badge.channel-rtve {
+  border-color: rgba(255, 143, 57, .58);
+  background: linear-gradient(135deg, rgba(242, 101, 34, .32), rgba(94, 45, 39, .24));
+}
+.agenda-channel-badge.channel-rtve > span { color: #ffd0a8; }
+.agenda-channel-badge.channel-gol {
+  border-color: rgba(87, 229, 155, .55);
+  background: linear-gradient(135deg, rgba(42, 185, 112, .28), rgba(21, 81, 75, .24));
+}
+.agenda-channel-badge.channel-gol > span { color: #aef4d1; }
+.agenda-channel-badge.channel-prime {
+  border-color: rgba(86, 193, 255, .55);
+  background: linear-gradient(135deg, rgba(36, 143, 208, .3), rgba(28, 59, 109, .26));
+}
+.agenda-channel-badge.channel-prime > span { color: #a9e3ff; }
+.agenda-channel-badge.channel-max {
+  border-color: rgba(135, 99, 255, .58);
+  background: linear-gradient(135deg, rgba(99, 59, 221, .34), rgba(47, 35, 111, .28));
+}
+.agenda-channel-badge.channel-max > span { color: #cec0ff; }
+.agenda-channel-badge.channel-disney {
+  border-color: rgba(115, 130, 255, .58);
+  background: linear-gradient(135deg, rgba(74, 80, 211, .34), rgba(42, 33, 105, .28));
+}
+.agenda-channel-badge.channel-disney > span { color: #c8ceff; }
+.agenda-channel-badge.channel-youtube {
+  border-color: rgba(255, 82, 82, .58);
+  background: linear-gradient(135deg, rgba(225, 39, 39, .34), rgba(91, 25, 41, .26));
+}
+.agenda-channel-badge.channel-youtube > span { color: #ffc1c1; }
 
 .agenda-date td {
   padding-top: 1.15rem;
@@ -648,13 +695,21 @@ button:disabled { cursor: not-allowed; opacity: .48; }
     rgba(5, 14, 26, .78);
 }
 .agenda-sport-heading::before {
-  width: .42rem;
-  height: .42rem;
-  border-radius: 50%;
-  background: var(--sport-accent);
-  box-shadow: 0 0 12px var(--sport-accent);
-  content: "";
+  display: none;
 }
+.agenda-sport-icon {
+  display: grid;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid var(--sport-accent);
+  border-radius: 10px;
+  color: var(--sport-accent);
+  background: rgba(40, 213, 223, .08);
+  box-shadow: 0 0 16px rgba(40, 213, 223, .1);
+}
+.agenda-sport-icon svg { width: 1.18rem; height: 1.18rem; }
 .agenda-sport-heading h3 {
   flex: 1;
   margin: 0;
@@ -662,7 +717,7 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   font-size: 1.02rem;
   letter-spacing: .01em;
 }
-.agenda-sport-heading span {
+.agenda-sport-count {
   flex: 0 0 auto;
   border: 1px solid rgba(255, 181, 71, .32);
   border-radius: 999px;
@@ -673,6 +728,33 @@ button:disabled { cursor: not-allowed; opacity: .48; }
   font-weight: 800;
 }
 .agenda-sport-group .agenda-table td { border-bottom-color: rgba(43, 60, 85, .62); }
+.agenda-period-divider td {
+  padding: .42rem 1.15rem;
+  border-bottom: 1px solid rgba(77, 112, 151, .38);
+  background: linear-gradient(90deg, rgba(255, 181, 71, .035), rgba(40, 213, 223, .045));
+  text-align: left;
+}
+.agenda-period-divider span {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  color: #9fb2ca;
+  font-size: .62rem;
+  font-weight: 950;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.agenda-period-divider span::before {
+  width: .38rem;
+  height: .38rem;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 9px rgba(255, 181, 71, .45);
+  content: "";
+}
+.agenda-period-divider.period-morning span::before { background: #ffd166; }
+.agenda-period-divider.period-afternoon span::before { background: #ff9d57; }
+.agenda-period-divider.period-night span::before { background: #a989ff; }
 .empty-agenda { padding: 3.5rem 1.2rem; color: var(--muted); text-align: center; }
 
 .public-footer-status {
@@ -1039,7 +1121,7 @@ input[type="password"], input[type="text"], input[type="email"] { min-height: 48
   .agenda-channel-badge { justify-self: center; }
   .agenda-groups { gap: .75rem; padding: .7rem; }
   .agenda-sport-heading { padding: .7rem .78rem; }
-  .agenda-sport-heading span { font-size: .72rem; }
+  .agenda-sport-count { font-size: .72rem; }
   .preview-frame { max-height: 380px; }
   .public-main { padding-top: .8rem; }
   .public-hero { gap: .22rem; padding-top: .45rem; padding-bottom: .8rem; }

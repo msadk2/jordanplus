@@ -115,6 +115,17 @@
     return match ? Number(match[1]) * 60 + Number(match[2]) : -1;
   }
 
+  function dayPeriod(minutes) {
+    if (minutes < 0) return null;
+    if (minutes >= 6 * 60 && minutes < 14 * 60) {
+      return { key: "morning", label: "Mañana" };
+    }
+    if (minutes >= 14 * 60 && minutes < 20 * 60) {
+      return { key: "afternoon", label: "Tarde" };
+    }
+    return { key: "night", label: "Noche" };
+  }
+
   function madridMinutes() {
     const parts = new Intl.DateTimeFormat("en-GB", {
       timeZone: "Europe/Madrid",
@@ -144,6 +155,71 @@
     if (/ciclismo|atletismo/.test(value)) return "sport-green";
     if (/futbol sala|balonmano/.test(value)) return "sport-blue";
     return "sport-cyan";
+  }
+
+  function sportIconMarkup(sport) {
+    const value = normalizeForMatch(sport);
+    if (/tenis|padel/.test(value)) {
+      return '<circle cx="12" cy="12" r="8.5"/><path d="M6 6c3.6 3.2 8.4 3.2 12 0M6 18c3.6-3.2 8.4-3.2 12 0"/>';
+    }
+    if (/baloncesto/.test(value)) {
+      return '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17M3.5 12h17M5.3 6.4c3.2 1.7 5 4.4 5.2 8.1M18.7 17.6c-3.2-1.7-5-4.4-5.2-8.1"/>';
+    }
+    if (/golf/.test(value)) {
+      return '<path d="M7 21V4m0 1h9l-3 4H7M3.5 21h9"/>';
+    }
+    if (/motor|formula|motogp/.test(value)) {
+      return '<path d="M5 21V4m0 1h12l-3 4 3 4H5M8 5v8m4-8v8"/>';
+    }
+    if (/ciclismo/.test(value)) {
+      return '<circle cx="6" cy="17" r="3.5"/><circle cx="18" cy="17" r="3.5"/><path d="m6 17 4-7 3 7H6l5-4h5l2 4M9 7h3"/>';
+    }
+    if (/futbol americano|rugby/.test(value)) {
+      return '<path d="M5.3 17.8c-2.3-2.3-.7-7.6 3.1-11.4s9.1-5.4 11.4-3.1.9.9 1 2.5.5 4.3-.7 2.5-2.5 5.2-4.7 7.4-3.8 3.8-9.1 5.4-11.4 3.1Z"/><path d="m9 15 6-6m-4.5 2.5 2 2m-4-1 2 2m2-4 2 2"/>';
+    }
+    if (/hockey/.test(value)) {
+      return '<path d="M6 4v10.5c0 2 1.5 3.5 3.5 3.5H18M18 4v10.5c0 2-1.5 3.5-3.5 3.5H6"/><circle cx="12" cy="20.5" r="1"/>';
+    }
+    if (/boxeo|mma/.test(value)) {
+      return '<path d="M7 12V7.5A4.5 4.5 0 0 1 11.5 3H14a4 4 0 0 1 4 4v5l-3 3H9l-2-3Z"/><path d="M9 15v5h7v-5M11 7v3m3-3v3"/>';
+    }
+    if (/atletismo/.test(value)) {
+      return '<circle cx="15.5" cy="4.5" r="1.7"/><path d="m13 8-3 4 3 2 2.5 6M13 8l4 3 3-1M10 12l-5 1m8 1-4 6"/>';
+    }
+    if (/voleibol/.test(value)) {
+      return '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5c1.8 2.8 2.2 5.5 1.1 8.1M4.4 8.2c3.4-.2 6.1.9 8.7 3.4M6.1 18.2c1.6-3 3.9-5.1 7-6.6M19.6 8.2c-3.4-.2-5.8.8-7.7 2.6"/>';
+    }
+    return '<circle cx="12" cy="12" r="8.5"/><path d="m12 7 3 2.2-1.1 3.5H10L9 9.2 12 7Zm-8.1 3.5L10 12.7m4 0 6.1-2.2M8.2 19l1.8-6.3m5.8 6.3-1.9-6.3"/>';
+  }
+
+  function createSportIcon(sport) {
+    const holder = document.createElement("span");
+    holder.className = "agenda-sport-icon";
+    holder.setAttribute("aria-hidden", "true");
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.8");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.innerHTML = sportIconMarkup(sport);
+    holder.appendChild(svg);
+    return holder;
+  }
+
+  function channelAccentClass(channel) {
+    const value = normalizeForMatch(channel);
+    if (/^dazn\b/.test(value)) return "channel-dazn";
+    if (/m\+|movistar|vamos|liga de campeones/.test(value)) return "channel-movistar";
+    if (/eurosport/.test(value)) return "channel-eurosport";
+    if (/teledeporte|rtve|la 1|la 2/.test(value)) return "channel-rtve";
+    if (/gol(?: play)?/.test(value)) return "channel-gol";
+    if (/amazon|prime video/.test(value)) return "channel-prime";
+    if (/max\b/.test(value)) return "channel-max";
+    if (/disney/.test(value)) return "channel-disney";
+    if (/youtube/.test(value)) return "channel-youtube";
+    return "channel-default";
   }
 
   function estimatedDuration(sport) {
@@ -242,7 +318,7 @@
 
     if (details.channel) {
       const channel = document.createElement("span");
-      channel.className = "agenda-channel-badge";
+      channel.className = "agenda-channel-badge " + channelAccentClass(details.channel);
       const label = document.createElement("span");
       label.textContent = "VER EN";
       const name = document.createElement("strong");
@@ -297,8 +373,17 @@
       const visibleEvents = Array.from(group.querySelectorAll(".agenda-event")).filter(function (row) {
         return !row.hidden;
       });
+      Array.from(group.querySelectorAll(".agenda-period-divider")).forEach(function (divider) {
+        let sibling = divider.nextElementSibling;
+        let hasVisibleEvents = false;
+        while (sibling && !sibling.classList.contains("agenda-period-divider")) {
+          if (sibling.classList.contains("agenda-event") && !sibling.hidden) hasVisibleEvents = true;
+          sibling = sibling.nextElementSibling;
+        }
+        divider.hidden = !hasVisibleEvents;
+      });
       group.hidden = !visibleEvents.length;
-      const count = group.querySelector(".agenda-sport-heading > span");
+      const count = group.querySelector(".agenda-sport-count");
       if (count) {
         count.textContent = visibleEvents.length + (visibleEvents.length === 1 ? " evento" : " eventos");
       }
@@ -387,19 +472,39 @@
       const title = document.createElement("h3");
       title.textContent = sport;
       const count = document.createElement("span");
+      count.className = "agenda-sport-count";
       count.textContent = events.length + (events.length === 1 ? " evento" : " eventos");
-      heading.append(title, count);
+      heading.append(createSportIcon(sport), title, count);
 
       const table = document.createElement("table");
       table.className = "agenda-table";
       table.setAttribute("aria-label", "Eventos de " + sport);
       const tbody = document.createElement("tbody");
 
+      const periods = new Set(events.map(function (line) {
+        const details = splitEventDetails(line);
+        const period = dayPeriod(timeToMinutes(details.time));
+        return period ? period.key : "";
+      }).filter(Boolean));
+      let activePeriod = "";
+
       events.forEach(function (line) {
         const row = document.createElement("tr");
         row.className = "agenda-event";
         const details = splitEventDetails(line);
         const minutes = timeToMinutes(details.time);
+        const period = dayPeriod(minutes);
+        if (periods.size > 1 && period && period.key !== activePeriod) {
+          const divider = document.createElement("tr");
+          divider.className = "agenda-period-divider period-" + period.key;
+          const dividerCell = document.createElement("td");
+          const dividerLabel = document.createElement("span");
+          dividerLabel.textContent = period.label;
+          dividerCell.appendChild(dividerLabel);
+          divider.appendChild(dividerCell);
+          tbody.appendChild(divider);
+          activePeriod = period.key;
+        }
         if (minutes >= 0) row.dataset.eventMinutes = String(minutes);
         const cell = document.createElement("td");
         cell.appendChild(createEventLayout(line, eventUpdates));
