@@ -171,6 +171,24 @@
     return heading ? heading.textContent.trim() : "Otros deportes";
   }
 
+  function newBadgeExpiresAt(update) {
+    if (!update || update.slot === "00:05") return 0;
+    const firstSeenAt = Date.parse(String(update.first_seen_at || ""));
+    if (!Number.isFinite(firstSeenAt)) return 0;
+    return firstSeenAt + 60 * 60 * 1000;
+  }
+
+  function updateNewBadges(target) {
+    const now = Date.now();
+    target.querySelectorAll(".agenda-new-badge[data-new-until]").forEach(function (badge) {
+      const expiresAt = Number(badge.dataset.newUntil);
+      if (!Number.isFinite(expiresAt) || now < expiresAt) return;
+      const row = badge.closest(".agenda-event");
+      badge.remove();
+      if (row) row.classList.remove("has-new-update");
+    });
+  }
+
   function createEventLayout(line, eventUpdates) {
     const details = splitEventDetails(line);
     const layout = document.createElement("div");
@@ -204,14 +222,16 @@
     const flags = document.createElement("span");
     flags.className = "agenda-event-flags";
     const update = eventUpdates[eventKey(details.time, details.title)];
-    if (update && update.slot && update.slot !== "00:05") {
+    const newUntil = newBadgeExpiresAt(update);
+    if (newUntil > Date.now()) {
       const newBadge = document.createElement("span");
       newBadge.className = "agenda-new-badge";
+      newBadge.dataset.newUntil = String(newUntil);
       const newDot = document.createElement("span");
       newDot.className = "agenda-new-dot";
       newDot.setAttribute("aria-hidden", "true");
       const newText = document.createElement("span");
-      newText.textContent = "NUEVO · añadido " + update.slot;
+      newText.textContent = "NUEVO";
       newBadge.append(newDot, newText);
       flags.appendChild(newBadge);
     }
@@ -410,6 +430,7 @@
   window.SpinningTV = {
     renderAgenda: renderAgenda,
     updateNextEvent: updateNextEvent,
+    updateNewBadges: updateNewBadges,
     estimatedDuration: estimatedDuration,
     browserName: browserName,
     formatAgendaDate: formatAgendaDate
