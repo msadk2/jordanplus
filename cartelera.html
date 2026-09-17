@@ -14,6 +14,12 @@
   <link rel="icon" href="app-icon.png" type="image/png">
   <link rel="apple-touch-icon" href="app-icon.png">
   <link rel="stylesheet" href="cartelera.css?v=20260913-premium33">
+  <style>
+    .day-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px 16px 0; }
+    .day-tab { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px 12px; color: #b8c2d1; background: rgba(255,255,255,.04); font: inherit; font-weight: 800; cursor: pointer; }
+    .day-tab small { display: block; margin-top: 2px; font-size: .72em; font-weight: 600; opacity: .8; }
+    .day-tab.active { color: #fff; border-color: #a93cff; background: linear-gradient(135deg, rgba(169,60,255,.32), rgba(233,32,142,.22)); box-shadow: 0 0 20px rgba(169,60,255,.14); }
+  </style>
 </head>
 <body class="public-page no-copy">
   <header class="site-shell public-hero">
@@ -25,6 +31,10 @@
   <main class="site-shell public-main">
     <div id="status" class="status-banner" role="status" aria-live="polite"></div>
     <section class="agenda-card">
+      <nav class="day-tabs" aria-label="Día de programación">
+        <button id="todayTab" class="day-tab active" type="button" aria-selected="true">HOY<small id="todayTabDate"></small></button>
+        <button id="tomorrowTab" class="day-tab" type="button" aria-selected="false">MAÑANA<small id="tomorrowTabDate"></small></button>
+      </nav>
       <div class="agenda-day">
         <span>Eventos del día</span>
         <h1 id="agendaDate">Cargando fecha…</h1>
@@ -64,8 +74,44 @@
       const sportCountSummary = document.getElementById("sportCountSummary");
       const startedEvents = document.getElementById("startedEvents");
       const startedEventsList = document.getElementById("startedEventsList");
+      const todayTab = document.getElementById("todayTab");
+      const tomorrowTab = document.getElementById("tomorrowTab");
+      const todayTabDate = document.getElementById("todayTabDate");
+      const tomorrowTabDate = document.getElementById("tomorrowTabDate");
       let lastRenderSignature = null;
+      let latestRow = null;
+      let activeDay = "today";
       let db = null;
+
+      function madridDateKey(dayOffset) {
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit"
+        }).formatToParts(new Date());
+        const value = function (type) {
+          return Number((parts.find(function (part) { return part.type === type; }) || {}).value || 0);
+        };
+        return new Date(Date.UTC(value("year"), value("month") - 1, value("day") + dayOffset, 12))
+          .toISOString().slice(0, 10);
+      }
+
+      function displayDate(dateKey, short) {
+        const parts = dateKey.split("-").map(Number);
+        const date = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 12));
+        return new Intl.DateTimeFormat("es-ES", short
+          ? { timeZone: "UTC", day: "2-digit", month: "2-digit" }
+          : { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" }
+        ).format(date);
+      }
+
+      function resolveDay(row, dateKey) {
+        if (String(row.content_date || "") === dateKey) {
+          return { content: String(row.content || ""), eventUpdates: row.event_updates || {} };
+        }
+        if (String(row.tomorrow_date || "") === dateKey) {
+          return { content: String(row.tomorrow_content || ""), eventUpdates: row.tomorrow_event_updates || {} };
+        }
+        return { content: "", eventUpdates: {} };
+      }
 
       function madridClock() {
         const parts = new Intl.DateTimeFormat("en-GB", {
@@ -82,6 +128,11 @@
       }
 
       function updateStartedEvents() {
+        if (activeDay !== "today") {
+          startedEventsList.replaceChildren();
+          startedEvents.hidden = true;
+          return;
+        }
         const clock = madridClock();
         const now = clock.hour * 60 + clock.minute;
         const rows = Array.from(agenda.querySelectorAll(".agenda-event[data-event-minutes]"))
@@ -129,7 +180,7 @@
       }
 
       function updatePublicSummary() {
-        window.SpinningTV.updateNextEvent(agenda);
+        if (activeDay === "today") window.SpinningTV.updateNextEvent(agenda);
         window.SpinningTV.updateNewBadges(agenda);
         const eventCount = Array.from(agenda.querySelectorAll(".agenda-event")).filter(function (row) {
           return !row.hidden;
@@ -140,6 +191,27 @@
         eventCountSummary.textContent = String(eventCount);
         sportCountSummary.textContent = String(sportCount);
         updateStartedEvents();
+      }
+
+      function renderSelectedDay() {
+        if (!latestRow) return;
+        const offset = activeDay === "tomorrow" ? 1 : 0;
+        const dateKey = madridDateKey(offset);
+        const selected = resolveDay(latestRow, dateKey);
+        const renderSignature = activeDay + "\n" + dateKey + "\n" + selected.content + "\n" + JSON.stringify(selected.eventUpdates);
+        if (renderSignature !== lastRenderSignature) {
+          window.SpinningTV.renderAgenda(selected.content, agenda, {
+            eventUpdates: selected.eventUpdates,
+            highlightNext: activeDay === "today"
+          });
+          lastRenderSignature = renderSignature;
+        }
+        agendaDate.textContent = displayDate(dateKey, false);
+        todayTab.classList.toggle("active", activeDay === "today");
+        tomorrowTab.classList.toggle("active", activeDay === "tomorrow");
+        todayTab.setAttribute("aria-selected", String(activeDay === "today"));
+        tomorrowTab.setAttribute("aria-selected", String(activeDay === "tomorrow"));
+        updatePublicSummary();
       }
 
       async function loadAgenda() {
@@ -153,21 +225,14 @@
         try {
           const result = await db
             .from("cartelera")
-            .select("content, updated_at, event_updates")
+            .select("content, content_date, updated_at, event_updates, tomorrow_content, tomorrow_date, tomorrow_updated_at, tomorrow_event_updates")
             .eq("id", 1)
             .single();
           if (result.error) throw result.error;
-          const content = String(result.data.content || "");
-          const eventUpdates = result.data.event_updates && typeof result.data.event_updates === "object"
-            ? result.data.event_updates
-            : {};
-          const renderSignature = content + "\n" + JSON.stringify(eventUpdates);
-          if (renderSignature !== lastRenderSignature) {
-            window.SpinningTV.renderAgenda(content, agenda, { eventUpdates: eventUpdates, highlightNext: true });
-            lastRenderSignature = renderSignature;
-          }
-          updatePublicSummary();
-          agendaDate.textContent = window.SpinningTV.formatAgendaDate(result.data.updated_at);
+          latestRow = result.data;
+          todayTabDate.textContent = displayDate(madridDateKey(0), true);
+          tomorrowTabDate.textContent = displayDate(madridDateKey(1), true);
+          renderSelectedDay();
           status.className = "status-banner";
         } catch (error) {
           console.error(error);
@@ -183,6 +248,17 @@
           { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
         );
       }
+
+      todayTab.addEventListener("click", function () {
+        activeDay = "today";
+        lastRenderSignature = null;
+        renderSelectedDay();
+      });
+      tomorrowTab.addEventListener("click", function () {
+        activeDay = "tomorrow";
+        lastRenderSignature = null;
+        renderSelectedDay();
+      });
 
       loadAgenda();
       const refreshMs = Math.max(15, Number(config.refreshSeconds) || 60) * 1000;
