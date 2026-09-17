@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="index, follow">
+  <title>Programación deportiva · SpinningTV</title>
+  <meta name="description" content="Eventos deportivos disponibles en SpinningTV.">
+  <meta name="theme-color" content="#07101d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SpinningTV">
+  <link rel="manifest" href="manifest-cartelera.webmanifest?v=2">
+  <link rel="icon" href="app-icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="app-icon.png">
+  <link rel="stylesheet" href="cartelera.css?v=20260913-premium33">
+  <style>
+    .day-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px 16px 0; }
+    .day-tab { border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 10px 12px; color: #b8c2d1; background: rgba(255,255,255,.04); font: inherit; font-weight: 800; cursor: pointer; }
+    .day-tab small { display: block; margin-top: 2px; font-size: .72em; font-weight: 600; opacity: .8; }
+    .day-tab.active { color: #fff; border-color: #a93cff; background: linear-gradient(135deg, rgba(169,60,255,.32), rgba(233,32,142,.22)); box-shadow: 0 0 20px rgba(169,60,255,.14); }
+  </style>
+</head>
+<body class="public-page no-copy">
+  <header class="site-shell public-hero">
+    <div class="public-brand-lockup">
+      <img class="public-brand-logo" src="spinning-ibo-logo-transparent.png" alt="Spinning IBO" draggable="false">
+    </div>
+  </header>
+
+  <main class="site-shell public-main">
+    <div id="status" class="status-banner" role="status" aria-live="polite"></div>
+    <section class="agenda-card">
+      <nav class="day-tabs" aria-label="Día de programación">
+        <button id="todayTab" class="day-tab active" type="button" aria-selected="true">HOY<small id="todayTabDate"></small></button>
+        <button id="tomorrowTab" class="day-tab" type="button" aria-selected="false">MAÑANA<small id="tomorrowTabDate"></small></button>
+      </nav>
+      <div class="agenda-day">
+        <span>Eventos del día</span>
+        <h1 id="agendaDate">Cargando fecha…</h1>
+        <div class="agenda-overview" aria-label="Resumen de la programación">
+          <div class="agenda-stat agenda-stat-events">
+            <strong id="eventCountSummary">—</strong>
+            <span>Eventos por finalizar</span>
+          </div>
+          <div class="agenda-stat agenda-stat-sports">
+            <strong id="sportCountSummary">—</strong>
+            <span>Deportes</span>
+          </div>
+        </div>
+      </div>
+      <section id="startedEvents" class="started-events" aria-labelledby="startedEventsTitle" hidden>
+        <div class="started-events-heading">
+          <h2 id="startedEventsTitle">Eventos iniciados</h2>
+        </div>
+        <div id="startedEventsList" class="started-events-list"></div>
+      </section>
+      <div id="agenda"><div class="empty-agenda">Cargando eventos…</div></div>
+    </section>
+
+  </main>
+
+  <script src="config-cartelera.js?v=20260910"></script>
+  <script src="cartelera-common.js?v=20260913-premium33"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    (function () {
+      "use strict";
+      const config = window.SPINNINGTV_CONFIG || {};
+      const agenda = document.getElementById("agenda");
+      const status = document.getElementById("status");
+      const agendaDate = document.getElementById("agendaDate");
+      const eventCountSummary = document.getElementById("eventCountSummary");
+      const sportCountSummary = document.getElementById("sportCountSummary");
+      const startedEvents = document.getElementById("startedEvents");
+      const startedEventsList = document.getElementById("startedEventsList");
+      const todayTab = document.getElementById("todayTab");
+      const tomorrowTab = document.getElementById("tomorrowTab");
+      const todayTabDate = document.getElementById("todayTabDate");
+      const tomorrowTabDate = document.getElementById("tomorrowTabDate");
+      let lastRenderSignature = null;
+      let latestRow = null;
+      let activeDay = "today";
+      let db = null;
+
+      function madridDateKey(dayOffset) {
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit"
+        }).formatToParts(new Date());
+        const value = function (type) {
+          return Number((parts.find(function (part) { return part.type === type; }) || {}).value || 0);
+        };
+        return new Date(Date.UTC(value("year"), value("month") - 1, value("day") + dayOffset, 12))
+          .toISOString().slice(0, 10);
+      }
+
+      function displayDate(dateKey, short) {
+        const parts = dateKey.split("-").map(Number);
+        const date = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2], 12));
+        return new Intl.DateTimeFormat("es-ES", short
+          ? { timeZone: "UTC", day: "2-digit", month: "2-digit" }
+          : { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" }
+        ).format(date);
+      }
+
+      function resolveDay(row, dateKey) {
+        if (String(row.content_date || "") === dateKey) {
+          return { content: String(row.content || ""), eventUpdates: row.event_updates || {} };
+        }
+        if (String(row.tomorrow_date || "") === dateKey) {
+          return { content: String(row.tomorrow_content || ""), eventUpdates: row.tomorrow_event_updates || {} };
+        }
+        return { content: "", eventUpdates: {} };
+      }
+
+      function madridClock() {
+        const parts = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Europe/Madrid",
+          hour: "2-digit",
+          minute: "2-digit",
+          hourCycle: "h23"
+        }).formatToParts(new Date());
+        const value = function (type) {
+          const match = parts.find(function (part) { return part.type === type; });
+          return Number(match ? match.value : 0);
+        };
+        return { hour: value("hour"), minute: value("minute") };
+      }
+
+      function updateStartedEvents() {
+        if (activeDay !== "today") {
+          startedEventsList.replaceChildren();
+          startedEvents.hidden = true;
+          return;
+        }
+        const clock = madridClock();
+        const now = clock.hour * 60 + clock.minute;
+        const rows = Array.from(agenda.querySelectorAll(".agenda-event[data-event-minutes]"))
+          .map(function (row) {
+            const group = row.closest(".agenda-sport-group");
+            const heading = group ? group.querySelector(".agenda-sport-heading h3") : null;
+            const sport = heading ? heading.textContent.trim() : "Otros deportes";
+            const minutes = Number(row.dataset.eventMinutes);
+            return { row: row, minutes: minutes, sport: sport, duration: window.SpinningTV.estimatedDuration(sport) };
+          })
+          .filter(function (item) {
+            return Number.isFinite(item.minutes) && item.minutes <= now && now < item.minutes + item.duration;
+          })
+          .sort(function (left, right) { return right.minutes - left.minutes; });
+
+        startedEventsList.replaceChildren();
+        startedEvents.hidden = !rows.length;
+        rows.forEach(function (item) {
+          const source = item.row;
+          const card = document.createElement("article");
+          card.className = "started-event-item";
+
+          const time = document.createElement("time");
+          time.textContent = (source.querySelector("time") || {}).textContent || "";
+
+          const copy = document.createElement("div");
+          copy.className = "started-event-copy";
+          const statusLabel = document.createElement("span");
+          statusLabel.className = "started-event-status";
+          const statusDot = document.createElement("i");
+          statusDot.setAttribute("aria-hidden", "true");
+          statusLabel.append(statusDot, document.createTextNode("EN CURSO"));
+          const title = document.createElement("strong");
+          title.textContent = (source.querySelector(".agenda-event-title") || {}).textContent || "Evento deportivo";
+          const meta = document.createElement("span");
+          const competition = (source.querySelector(".agenda-event-competition") || {}).textContent || "";
+          const channel = (source.querySelector(".agenda-channel-badge strong") || {}).textContent || "";
+          meta.textContent = [item.sport, competition, channel].filter(Boolean).join(" · ");
+          copy.append(statusLabel, title);
+          if (meta.textContent) copy.appendChild(meta);
+
+          card.append(time, copy);
+          startedEventsList.appendChild(card);
+        });
+      }
+
+      function updatePublicSummary() {
+        if (activeDay === "today") window.SpinningTV.updateNextEvent(agenda);
+        window.SpinningTV.updateNewBadges(agenda);
+        const eventCount = Array.from(agenda.querySelectorAll(".agenda-event")).filter(function (row) {
+          return !row.hidden;
+        }).length;
+        const sportCount = Array.from(agenda.querySelectorAll(".agenda-sport-group")).filter(function (group) {
+          return !group.hidden;
+        }).length;
+        eventCountSummary.textContent = String(eventCount);
+        sportCountSummary.textContent = String(sportCount);
+        updateStartedEvents();
+      }
+
+      function renderSelectedDay() {
+        if (!latestRow) return;
+        const offset = activeDay === "tomorrow" ? 1 : 0;
+        const dateKey = madridDateKey(offset);
+        const selected = resolveDay(latestRow, dateKey);
+        const renderSignature = activeDay + "\n" + dateKey + "\n" + selected.content + "\n" + JSON.stringify(selected.eventUpdates);
+        if (renderSignature !== lastRenderSignature) {
+          window.SpinningTV.renderAgenda(selected.content, agenda, {
+            eventUpdates: selected.eventUpdates,
+            highlightNext: activeDay === "today"
+          });
+          lastRenderSignature = renderSignature;
+        }
+        agendaDate.textContent = displayDate(dateKey, false);
+        todayTab.classList.toggle("active", activeDay === "today");
+        tomorrowTab.classList.toggle("active", activeDay === "tomorrow");
+        todayTab.setAttribute("aria-selected", String(activeDay === "today"));
+        tomorrowTab.setAttribute("aria-selected", String(activeDay === "tomorrow"));
+        updatePublicSummary();
+      }
+
+      async function loadAgenda() {
+        if (!db) {
+          status.textContent = "La cartelera todavía no está conectada.";
+          status.className = "status-banner visible error";
+          window.SpinningTV.renderAgenda("", agenda);
+          return;
+        }
+
+        try {
+          const result = await db
+            .from("cartelera")
+            .select("content, content_date, updated_at, event_updates, tomorrow_content, tomorrow_date, tomorrow_updated_at, tomorrow_event_updates")
+            .eq("id", 1)
+            .single();
+          if (result.error) throw result.error;
+          latestRow = result.data;
+          todayTabDate.textContent = displayDate(madridDateKey(0), true);
+          tomorrowTabDate.textContent = displayDate(madridDateKey(1), true);
+          renderSelectedDay();
+          status.className = "status-banner";
+        } catch (error) {
+          console.error(error);
+          status.textContent = "No ha sido posible cargar la cartelera. Se volverá a intentar automáticamente.";
+          status.className = "status-banner visible error";
+        }
+      }
+
+      if (window.supabase && /^https:\/\/.+\.supabase\.co$/i.test(String(config.supabaseUrl || "")) && String(config.supabaseKey || "").length > 20) {
+        db = window.supabase.createClient(
+          String(config.supabaseUrl).replace(/\/$/, ""),
+          String(config.supabaseKey),
+          { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } }
+        );
+      }
+
+      todayTab.addEventListener("click", function () {
+        activeDay = "today";
+        lastRenderSignature = null;
+        renderSelectedDay();
+      });
+      tomorrowTab.addEventListener("click", function () {
+        activeDay = "tomorrow";
+        lastRenderSignature = null;
+        renderSelectedDay();
+      });
+
+      loadAgenda();
+      const refreshMs = Math.max(15, Number(config.refreshSeconds) || 60) * 1000;
+      setInterval(loadAgenda, refreshMs);
+      document.addEventListener("visibilitychange", function () {
+        if (!document.hidden) loadAgenda();
+      });
+
+      ["copy", "cut", "contextmenu", "dragstart", "selectstart"].forEach(function (eventName) {
+        document.addEventListener(eventName, function (event) {
+          event.preventDefault();
+        });
+      });
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", function () {
+          navigator.serviceWorker.register("./service-worker.js?v=18", { updateViaCache: "none" }).then(function (registration) {
+            return registration.update();
+          }).catch(function (error) {
+            console.error("No se pudo activar el modo aplicación.", error);
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
