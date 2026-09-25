@@ -315,6 +315,13 @@
       font-variant-numeric: tabular-nums;
     }
 
+    .card-actions {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
     .download {
       position: relative;
       z-index: 2;
@@ -370,6 +377,50 @@
     }
 
     .download:focus-visible { outline: 3px solid #fff; outline-offset: 5px; }
+
+    .copy-link {
+      min-width: 142px;
+      min-height: 50px;
+      padding: 11px 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid rgba(173, 126, 255, .48);
+      border-radius: 13px;
+      color: #fff;
+      background: linear-gradient(145deg, rgba(117, 65, 191, .34), rgba(35, 162, 193, .18));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08), 0 10px 24px rgba(42, 20, 74, .22);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .045em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease;
+    }
+
+    .copy-link::after { content: "⧉"; font-size: 18px; line-height: 1; }
+
+    .copy-link:hover,
+    .copy-link:focus-visible {
+      transform: translateY(-3px);
+      border-color: rgba(100, 224, 255, .9);
+      background: linear-gradient(145deg, rgba(129, 69, 219, .54), rgba(32, 180, 214, .30));
+      box-shadow: 0 0 22px rgba(77, 188, 255, .30), 0 14px 30px rgba(42, 20, 74, .30);
+      outline: none;
+    }
+
+    .copy-link:focus-visible { outline: 3px solid #fff; outline-offset: 5px; }
+
+    .copy-link.is-copied {
+      border-color: rgba(85, 239, 170, .78);
+      color: #d9ffef;
+      background: linear-gradient(145deg, rgba(28, 160, 112, .48), rgba(21, 114, 119, .42));
+      box-shadow: 0 0 22px rgba(85, 239, 170, .25);
+    }
+
+    .copy-link.is-copied::after { content: "✓"; }
 
     @keyframes download-glow {
       from { opacity: .62; filter: blur(14px); }
@@ -501,7 +552,23 @@
 
       .download::after { font-size: 16px; }
 
+      .card-actions { gap: 6px; }
+
+      .copy-link {
+        min-width: 116px;
+        min-height: 42px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        font-size: 10px;
+      }
+
+      .copy-link::after { font-size: 15px; }
+
       footer { padding: 0 20px 16px; }
+    }
+
+    @media (min-width: 900px) and (max-width: 1150px) {
+      .card-actions { flex-direction: column; align-items: stretch; }
     }
 
     @media (min-width: 1450px) {
@@ -526,7 +593,8 @@
       .card h3 { min-width: 0; }
       .downloader-code { flex-direction: column; gap: 5px; padding: 10px 16px; }
       .downloader-code strong { font-size: 20px; }
-      .download { width: 100%; min-height: 56px; font-size: 17px; }
+      .card-actions { width: 100%; flex-direction: column; }
+      .download, .copy-link { width: 100%; min-height: 56px; font-size: 17px; }
       .badge { padding: 7px 9px; font-size: 9px; }
     }
 
@@ -564,7 +632,7 @@
               <path d="M20 7v18M13.5 18.5L20 25l6.5-6.5M9 27v5h22v-5" fill="none" stroke="white" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </span>
-          <p>Pulsa <strong>DESCARGAR</strong> o utiliza el código Downloader.</p>
+          <p>Pulsa <strong>DESCARGAR</strong>, copia el enlace o utiliza el código Downloader.</p>
         </div>
         <div class="intro-step">
           <span class="intro-step-icon" aria-hidden="true">
@@ -744,7 +812,76 @@
       label.appendChild(icon);
     });
 
-    document.addEventListener("copy", event => event.preventDefault());
+    let allowProgrammaticCopy = false;
+
+    function fallbackCopy(text) {
+      const field = document.createElement("textarea");
+      field.value = text;
+      field.setAttribute("readonly", "");
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      field.style.pointerEvents = "none";
+      document.body.appendChild(field);
+      field.select();
+      field.setSelectionRange(0, field.value.length);
+      allowProgrammaticCopy = true;
+      const copied = document.execCommand("copy");
+      allowProgrammaticCopy = false;
+      field.remove();
+      return copied;
+    }
+
+    document.querySelectorAll(".card").forEach(card => {
+      const download = card.querySelector("a.download");
+      if (!download) return;
+
+      const actions = document.createElement("div");
+      actions.className = "card-actions";
+      download.parentNode.insertBefore(actions, download);
+      actions.appendChild(download);
+
+      const copyButton = document.createElement("button");
+      copyButton.type = "button";
+      copyButton.className = "copy-link";
+      copyButton.textContent = "Copiar enlace";
+      const appName = card.querySelector("h3")?.textContent.trim() || "la aplicación";
+      copyButton.setAttribute("aria-label", `Copiar enlace de ${appName}`);
+      actions.appendChild(copyButton);
+
+      let feedbackTimer;
+      copyButton.addEventListener("click", async () => {
+        const url = download.href;
+        let copied = false;
+
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(url);
+            copied = true;
+          } else {
+            copied = fallbackCopy(url);
+          }
+        } catch (_) {
+          copied = fallbackCopy(url);
+        }
+
+        if (!copied) {
+          window.prompt("Copia este enlace:", url);
+          return;
+        }
+
+        clearTimeout(feedbackTimer);
+        copyButton.textContent = "¡Copiado!";
+        copyButton.classList.add("is-copied");
+        feedbackTimer = setTimeout(() => {
+          copyButton.textContent = "Copiar enlace";
+          copyButton.classList.remove("is-copied");
+        }, 1800);
+      });
+    });
+
+    document.addEventListener("copy", event => {
+      if (!allowProgrammaticCopy) event.preventDefault();
+    });
     document.addEventListener("cut", event => event.preventDefault());
     document.addEventListener("dragstart", event => event.preventDefault());
     document.addEventListener("selectstart", event => event.preventDefault());
